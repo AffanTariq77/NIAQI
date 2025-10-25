@@ -2,27 +2,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('heather.ues@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -89,6 +89,7 @@ const LoginScreen = () => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             {/* Back Button */}
             <TouchableOpacity
@@ -100,7 +101,9 @@ const LoginScreen = () => {
 
             {/* Header */}
             <View style={styles.header}>
+              <View style={styles.headerSpacer} />
               <Text style={styles.headerTitle}>Sign In</Text>
+              <View style={styles.headerSpacer} />
             </View>
 
             <Animated.View style={[styles.content, animatedStyle]}>
@@ -214,10 +217,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   backButton: {
     position: 'absolute',
-    top: 60,
+    top: 50,
     left: 20,
     zIndex: 1,
     width: 40,
@@ -229,45 +233,55 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#333333',
     fontWeight: 'bold',
+    marginTop: -20,
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
+    justifyContent: 'center',
+    paddingTop: 50,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333333',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 40,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: -50,
+    marginTop: -50,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 260,
+    height: 260,
   },
   welcomeTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#333333',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   welcomeSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666666',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 16,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   inputLabel: {
     fontSize: 14,
@@ -285,7 +299,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 14,
     fontSize: 16,
     color: '#333333',
   },
@@ -304,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 16,
   },
   rememberMeContainer: {
     flexDirection: 'row',
@@ -337,9 +351,9 @@ const styles = StyleSheet.create({
   },
   signInButton: {
     backgroundColor: '#000000',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 12,
   },
   signInButtonText: {
     color: '#FFFFFF',
@@ -351,7 +365,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 12,
   },
   signUpText: {
     fontSize: 14,
@@ -369,9 +383,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 8,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   googleIcon: {
     fontSize: 18,
