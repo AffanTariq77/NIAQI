@@ -71,15 +71,21 @@ const OnboardingScreen = () => {
     if (currentPage < onboardingData.length - 1) {
       const nextPage = currentPage + 1;
       
-      // Animate content transition
+      // Animate content transition - fade out current content
       contentOpacity.value = withTiming(0, { duration: 150 });
       contentTranslateX.value = withTiming(-50, { duration: 150 });
       
       // Update state after a short delay
       setTimeout(() => {
         setCurrentPage(nextPage);
-        contentOpacity.value = withTiming(1, { duration: 200 });
-        contentTranslateX.value = withTiming(0, { duration: 200 });
+        // Set new content off-screen to the right, then slide in from right
+        contentTranslateX.value = 100;
+        contentOpacity.value = 0;
+        // Animate slide in from right
+        setTimeout(() => {
+          contentOpacity.value = withTiming(1, { duration: 200 });
+          contentTranslateX.value = withTiming(0, { duration: 200 });
+        }, 50);
       }, 150);
 
       // Animate pagination dots
@@ -94,15 +100,21 @@ const OnboardingScreen = () => {
     if (currentPage > 0) {
       const prevPage = currentPage - 1;
       
-      // Animate content transition
+      // Animate content transition - fade out current content
       contentOpacity.value = withTiming(0, { duration: 150 });
       contentTranslateX.value = withTiming(50, { duration: 150 });
       
       // Update state after a short delay
       setTimeout(() => {
         setCurrentPage(prevPage);
-        contentOpacity.value = withTiming(1, { duration: 200 });
-        contentTranslateX.value = withTiming(0, { duration: 200 });
+        // Set new content off-screen to the left, then slide in from left
+        contentTranslateX.value = -100;
+        contentOpacity.value = 0;
+        // Animate slide in from left
+        setTimeout(() => {
+          contentOpacity.value = withTiming(1, { duration: 200 });
+          contentTranslateX.value = withTiming(0, { duration: 200 });
+        }, 50);
       }, 150);
 
       // Animate pagination dots
