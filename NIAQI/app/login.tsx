@@ -1,25 +1,27 @@
+import { useAuth } from '@/lib/auth-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -27,6 +29,9 @@ const LoginScreen = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailValid, setEmailValid] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signIn } = useAuth();
 
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(30);
@@ -53,21 +58,51 @@ const LoginScreen = () => {
     setEmailValid(validateEmail(text));
   };
 
-  const handleSignIn = () => {
-    if (emailValid && password.length > 0) {
-      // Navigate to main app
-      router.push('/(tabs)');
+  const handleSignIn = async () => {
+    if (!emailValid) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address.',
+      });
+      return;
+    }
+
+    if (password.length === 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Password Required',
+        text2: 'Please enter your password.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn({ email, password, rememberMe });
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome Back!',
+        text2: 'Successfully signed in.',
+      });
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: error?.response?.data?.message || 'Invalid credentials. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = () => {
-    // Navigate to sign up screen
-    console.log('Navigate to sign up');
+    router.push('/signup');
   };
 
   const handleForgotPassword = () => {
-    // Navigate to forgot password screen
-    console.log('Navigate to forgot password');
+    router.push('/forgot-password');
   };
 
   const handleGoogleSignIn = () => {
@@ -183,8 +218,14 @@ const LoginScreen = () => {
               </View>
 
               {/* Sign In Button */}
-              <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-                <Text style={styles.signInButtonText}>Sign In</Text>
+              <TouchableOpacity 
+                style={[styles.signInButton, isLoading && styles.signInButtonDisabled]} 
+                onPress={handleSignIn}
+                disabled={isLoading}
+              >
+                <Text style={styles.signInButtonText}>
+                  {isLoading ? 'Signing In...' : 'Sign In'}
+                </Text>
               </TouchableOpacity>
 
               {/* Sign Up Link */}
@@ -355,6 +396,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
+  signInButtonDisabled: {
+    opacity: 0.6,
+  },
   signInButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
@@ -373,8 +417,8 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     fontSize: 14,
-    color: '#E0D8F0',
-    fontWeight: '500',
+    color: '#007AFF', // iOS blue for better visibility
+    fontWeight: '600',
   },
   googleButton: {
     flexDirection: 'row',

@@ -64,9 +64,9 @@ cd NIAQI
 
 Install all required npm packages:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 This will install all dependencies listed in `package.json`, including:
 - React Native core libraries
@@ -110,11 +110,11 @@ export const USE_MOCK_API = true; // Set to false when backend is running
 
 Start the Expo development server:
 
-```bash
+   ```bash
 npm start
 # or
-npx expo start
-```
+   npx expo start
+   ```
 
 You'll see a QR code in your terminal and browser.
 
