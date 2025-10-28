@@ -1,23 +1,22 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Image,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackgroundGradient from '../components/BackgroundGradient';
 
 interface OnboardingSlide {
   id: number;
@@ -25,31 +24,49 @@ interface OnboardingSlide {
   description: string;
   image: any;
   buttonText: string;
+  imageStyle?: any;
 }
 
 const onboardingData: OnboardingSlide[] = [
   {
     id: 1,
     title: 'Unparalleled Experience',
-    description: 'Our team consists of highly experienced industry professionals with over 50 years combined experience in the field and 20 years in the classroom.',
+    description:
+      'Our team consists of highly experienced industry professionals with over 50 years combined experience in the field and 20 years in the classroom.',
     image: require('../assets/logo.png'),
     buttonText: 'Next',
+    imageStyle: {
+      width: 420,
+      height: 420,
+    },
   },
   {
     id: 2,
     title: 'Comprehensive Mold Courses',
-    description: 'We provide the courses and tools you will need to properly identify, document and remediate IAQ related problems in living and working environments.',
+    description:
+      'We provide the courses and tools you will need to properly identify, document and remediate IAQ related problems in living and working environments.',
     image: require('../assets/mould.png'),
     buttonText: 'Next',
+    imageStyle: {
+      marginTop: 70,
+      width: 220,
+      height: 220,
+    },
   },
   {
     id: 3,
     title: 'State Approved Certifications',
-    description: 'We are currently approved in the state of Florida and will be expanding nation wide. Our courses can result in the following certifications.',
+    description:
+      'We are currently approved in the state of Florida and will be expanding nation wide. Our courses can result in the following certifications.',
     image: require('../assets/Medallions.png'),
     buttonText: 'Get Started',
+    imageStyle: {
+      width: 300,
+      height: 300,
+    },
   },
 ];
+
 
 const OnboardingScreen = () => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -59,13 +76,14 @@ const OnboardingScreen = () => {
   const contentOpacity = useSharedValue(1);
   const contentTranslateX = useSharedValue(0);
 
-  // Animation values for pagination dots
-  const dot1Scale = useSharedValue(1);
+  // Animation values for pagination dashes
   const dot1Opacity = useSharedValue(1);
-  const dot2Scale = useSharedValue(0.8);
-  const dot2Opacity = useSharedValue(0.4);
-  const dot3Scale = useSharedValue(0.8);
-  const dot3Opacity = useSharedValue(0.4);
+  const dot2Opacity = useSharedValue(0.3);
+  const dot3Opacity = useSharedValue(0.3);
+  
+  const dot1Width = useSharedValue(32);
+  const dot2Width = useSharedValue(24);
+  const dot3Width = useSharedValue(24);
 
   const goToNextPage = () => {
     if (currentPage < onboardingData.length - 1) {
@@ -131,25 +149,26 @@ const OnboardingScreen = () => {
   };
 
   const animatePaginationDots = (newPage: number) => {
-    // Reset all dots
-    dot1Scale.value = withSpring(0.8, { damping: 15 });
-    dot1Opacity.value = withTiming(0.4, { duration: 200 });
-    dot2Scale.value = withSpring(0.8, { damping: 15 });
-    dot2Opacity.value = withTiming(0.4, { duration: 200 });
-    dot3Scale.value = withSpring(0.8, { damping: 15 });
-    dot3Opacity.value = withTiming(0.4, { duration: 200 });
+    // Reset all dashes
+    dot1Opacity.value = withTiming(0.3, { duration: 200 });
+    dot2Opacity.value = withTiming(0.3, { duration: 200 });
+    dot3Opacity.value = withTiming(0.3, { duration: 200 });
+    
+    dot1Width.value = withTiming(24, { duration: 200 });
+    dot2Width.value = withTiming(24, { duration: 200 });
+    dot3Width.value = withTiming(24, { duration: 200 });
 
-    // Animate active dot
+    // Animate active dash
     setTimeout(() => {
       if (newPage === 0) {
-        dot1Scale.value = withSpring(1.2, { damping: 15 });
         dot1Opacity.value = withTiming(1, { duration: 200 });
+        dot1Width.value = withTiming(32, { duration: 200 });
       } else if (newPage === 1) {
-        dot2Scale.value = withSpring(1.2, { damping: 15 });
         dot2Opacity.value = withTiming(1, { duration: 200 });
+        dot2Width.value = withTiming(32, { duration: 200 });
       } else if (newPage === 2) {
-        dot3Scale.value = withSpring(1.2, { damping: 15 });
         dot3Opacity.value = withTiming(1, { duration: 200 });
+        dot3Width.value = withTiming(32, { duration: 200 });
       }
     }, 100);
   };
@@ -183,32 +202,31 @@ const OnboardingScreen = () => {
 
   const dot1AnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: dot1Scale.value }],
+      width: dot1Width.value,
       opacity: dot1Opacity.value,
     };
   });
 
   const dot2AnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: dot2Scale.value }],
+      width: dot2Width.value,
       opacity: dot2Opacity.value,
     };
   });
 
   const dot3AnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: dot3Scale.value }],
+      width: dot3Width.value,
       opacity: dot3Opacity.value,
     };
   });
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F0F4F8" />
-      <LinearGradient
-        colors={['#F0F4F8', '#E0D8F0', '#F0E8F8']}
-        style={styles.gradient}
-      >
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
         <SafeAreaView style={styles.container}>
           {/* Skip Button */}
           <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
@@ -221,9 +239,12 @@ const OnboardingScreen = () => {
               <Animated.View style={[styles.content, contentAnimatedStyle]}>
                 {/* Logo/Image */}
                 <View style={styles.imageContainer}>
-                  <Image source={currentSlide.image} style={styles.image} resizeMode="contain" />
-                </View>
-
+  <Image
+    source={currentSlide.image}
+    style={[styles.defaultImage, currentSlide.imageStyle]}
+    resizeMode="contain"
+  />
+</View>
                 {/* Title */}
                 <Text style={styles.title}>{currentSlide.title}</Text>
 
@@ -235,11 +256,11 @@ const OnboardingScreen = () => {
 
           {/* Fixed Bottom Area */}
           <View style={styles.bottomArea}>
-            {/* Pagination Indicators */}
+            {/* Pagination Indicators - as horizontal dashes */}
             <View style={styles.pagination}>
-              <Animated.View style={[styles.paginationDot, dot1AnimatedStyle]} />
-              <Animated.View style={[styles.paginationDot, dot2AnimatedStyle]} />
-              <Animated.View style={[styles.paginationDot, dot3AnimatedStyle]} />
+              <Animated.View style={[styles.paginationDash, dot1AnimatedStyle]} />
+              <Animated.View style={[styles.paginationDash, dot2AnimatedStyle]} />
+              <Animated.View style={[styles.paginationDash, dot3AnimatedStyle]} />
             </View>
 
             {/* Next Button */}
@@ -248,7 +269,6 @@ const OnboardingScreen = () => {
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-      </LinearGradient>
     </View>
   );
 };
@@ -256,52 +276,74 @@ const OnboardingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    zIndex: 1,
+  },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
   gradient: {
     flex: 1,
   },
   skipButton: {
     position: 'absolute',
-    top: 60,
+    top: 50,
     right: 20,
     zIndex: 1,
   },
   skipText: {
     fontSize: 16,
-    color: '#666666',
-    fontWeight: '500',
+    color: '#000000',
+    fontWeight: '400',
   },
   contentArea: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
+    paddingTop: 80,
   },
   content: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
   },
   imageContainer: {
-    marginBottom: 40,
+    width: '100%',
+    height: 300, // keeps a consistent frame height for all slides
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 48,
+    marginTop: -300,
   },
+  defaultImage: {
+    alignSelf: 'center',
+  },
+  
+  
   image: {
-    width: 200,
-    height: 200,
+    width: 240,
+    height: 120,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1F1F1F',
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 34,
+    marginBottom: 16,
+    letterSpacing: -0.5,
   },
   description: {
-    fontSize: 16,
-    color: '#666666',
+    fontSize: 15,
+    color: '#4A4A4A',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    paddingHorizontal: 10,
   },
   bottomArea: {
     position: 'absolute',
@@ -309,33 +351,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
-    paddingBottom: 40,
+    paddingBottom: 50,
+    paddingHorizontal: 40,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
+    gap: 3,
   },
-  paginationDot: {
-    width: 8,
-    height: 8,
+  paginationDash: {
+    height: 3,
     borderRadius: 4,
-    marginHorizontal: 4,
-    backgroundColor: '#CCCCCC',
+    backgroundColor: '#000000',
   },
   nextButton: {
     backgroundColor: '#000000',
     paddingVertical: 16,
     paddingHorizontal: 40,
-    borderRadius: 8,
-    marginHorizontal: 40,
+    borderRadius: 10,
+    alignItems: 'center',
   },
   nextButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });
 

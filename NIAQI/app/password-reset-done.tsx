@@ -1,4 +1,4 @@
-import GradientBackground from '@/components/GradientBackground';
+import BackgroundGradient from '@/components/BackgroundGradient';
 import PrimaryButton from '@/components/PrimaryButton';
 import { router } from 'expo-router';
 import React from 'react';
@@ -12,7 +12,10 @@ const PasswordResetDoneScreen = () => {
   };
 
   return (
-    <GradientBackground>
+    <View style={styles.wrapper}>
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           {/* Logo */}
@@ -36,13 +39,25 @@ const PasswordResetDoneScreen = () => {
           </View>
         </View>
       </SafeAreaView>
-    </GradientBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   container: {
     flex: 1,
+    zIndex: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
   },

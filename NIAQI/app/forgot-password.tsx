@@ -1,5 +1,5 @@
+import BackgroundGradient from '@/components/BackgroundGradient';
 import CustomTextInput from '@/components/CustomTextInput';
-import GradientBackground from '@/components/GradientBackground';
 import PrimaryButton from '@/components/PrimaryButton';
 import { apiClient } from '@/lib/api-client';
 import { router } from 'expo-router';
@@ -51,12 +51,15 @@ const ForgotPasswordScreen = () => {
   };
 
   return (
-    <GradientBackground>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.contentContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <StatusBar barStyle="dark-content" backgroundColor="#E0E8F5" />
         <SafeAreaView style={styles.safeArea}>
           <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -104,13 +107,25 @@ const ForgotPasswordScreen = () => {
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
-    </GradientBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    zIndex: 1,
   },
   safeArea: {
     flex: 1,
