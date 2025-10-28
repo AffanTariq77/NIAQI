@@ -28,6 +28,14 @@ export default function RootLayout() {
             <Stack.Screen name="reset-password" options={{ headerShown: false }} />
             <Stack.Screen name="password-reset-done" options={{ headerShown: false }} />
             <Stack.Screen name="account-created" options={{ headerShown: false }} />
+            <Stack.Screen name="memberships" options={{ headerShown: false }} />
+            <Stack.Screen name="cart" options={{ headerShown: false }} />
+            <Stack.Screen name="membership-details" options={{ headerShown: false }} />
+            <Stack.Screen name="course-details" options={{ headerShown: false }} />
+            <Stack.Screen name="course-completion" options={{ headerShown: false }} />
+            <Stack.Screen name="leave-review" options={{ headerShown: false }} />
+            <Stack.Screen name="student-base-data" options={{ headerShown: false }} />
+            <Stack.Screen name="student-info" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>

@@ -82,17 +82,17 @@ const SignUpScreen = () => {
         confirmPassword,
       });
 
-      // Show success and navigate to account created screen or login
+      // Show success and navigate to account created screen
       Toast.show({
         type: 'success',
         text1: 'Account Created!',
-        text2: 'Please check your email to verify your account.',
+        text2: 'Redirecting...',
       });
 
-      // Navigate to login after a short delay
+      // Navigate to account created screen after a short delay
       setTimeout(() => {
-        router.replace('/login');
-      }, 1500);
+        router.replace('/account-created');
+      }, 500);
     } catch (error: any) {
       Toast.show({
         type: 'error',
