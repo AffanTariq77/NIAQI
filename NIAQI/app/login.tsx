@@ -1,4 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import BackgroundGradient from '@/components/BackgroundGradient';
+import { useAuth } from '@/lib/auth-context';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -20,6 +22,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -27,6 +30,9 @@ const LoginScreen = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailValid, setEmailValid] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signIn } = useAuth();
 
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(30);
@@ -53,21 +59,51 @@ const LoginScreen = () => {
     setEmailValid(validateEmail(text));
   };
 
-  const handleSignIn = () => {
-    if (emailValid && password.length > 0) {
-      // Navigate to main app
-      router.push('/(tabs)');
+  const handleSignIn = async () => {
+    if (!emailValid) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address.',
+      });
+      return;
+    }
+
+    if (password.length === 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Password Required',
+        text2: 'Please enter your password.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn({ email, password, rememberMe });
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome Back!',
+        text2: 'Successfully signed in.',
+      });
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: error?.response?.data?.message || 'Invalid credentials. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = () => {
-    // Navigate to sign up screen
-    console.log('Navigate to sign up');
+    router.push('/signup');
   };
 
   const handleForgotPassword = () => {
-    // Navigate to forgot password screen
-    console.log('Navigate to forgot password');
+    router.push('/forgot-password');
   };
 
   const handleGoogleSignIn = () => {
@@ -76,14 +112,14 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#F0F4F8" />
-      <LinearGradient
-        colors={['#F0F4F8', '#E0D8F0', '#F0E8F8']}
-        style={styles.gradient}
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
+      <KeyboardAvoidingView
+        style={styles.contentContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <SafeAreaView style={styles.container}>
           <ScrollView
@@ -120,50 +156,53 @@ const LoginScreen = () => {
               <Text style={styles.welcomeTitle}>Welcome Back!</Text>
               <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
 
-              {/* Email Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={email}
-                    onChangeText={handleEmailChange}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#999999"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {emailValid && email.length > 0 && (
-                    <Text style={styles.checkIcon}>✓</Text>
-                  )}
-                </View>
-              </View>
+             {/* Email Input */}
+<View style={styles.inputContainer}>
+  <View style={styles.inputWrapper}>
+    <Text style={styles.inputLabel}>Email</Text>
+    <TextInput
+      style={styles.textInput}
+      value={email}
+      onChangeText={handleEmailChange}
+      placeholder="Enter your email"
+      placeholderTextColor="#B0B0B0"
+      keyboardType="email-address"
+      autoCapitalize="none"
+      autoCorrect={false}
+    />
+    {emailValid && email.length > 0 && (
+      <Ionicons name="checkmark" size={20} color="#000000" style={styles.checkIcon} />
+    )}
+  </View>
+</View>
 
-              {/* Password Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#999999"
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    <Text style={styles.eyeIconText}>
-                      {showPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+{/* Password Input */}
+<View style={styles.inputContainer}>
+  <View style={styles.inputWrapper}>
+    <Text style={styles.inputLabel}>Password</Text>
+    <TextInput
+      style={styles.textInput}
+      value={password}
+      onChangeText={setPassword}
+      placeholder="Enter your password"
+      placeholderTextColor="#B0B0B0"
+      secureTextEntry={!showPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+    />
+    <TouchableOpacity
+      onPress={() => setShowPassword(!showPassword)}
+      style={styles.eyeIcon}
+    >
+      <Ionicons
+        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+        size={22}
+        color="#000000"
+      />
+    </TouchableOpacity>
+  </View>
+</View>
+
 
               {/* Remember Me & Forgot Password */}
               <View style={styles.optionsContainer}>
@@ -183,8 +222,14 @@ const LoginScreen = () => {
               </View>
 
               {/* Sign In Button */}
-              <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-                <Text style={styles.signInButtonText}>Sign In</Text>
+              <TouchableOpacity 
+                style={[styles.signInButton, isLoading && styles.signInButtonDisabled]} 
+                onPress={handleSignIn}
+                disabled={isLoading}
+              >
+                <Text style={styles.signInButtonText}>
+                  {isLoading ? 'Signing In...' : 'Sign In'}
+                </Text>
               </TouchableOpacity>
 
               {/* Sign Up Link */}
@@ -196,15 +241,24 @@ const LoginScreen = () => {
               </View>
 
               {/* Google Sign In Button */}
-              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-                <Text style={styles.googleIcon}>G</Text>
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <TouchableOpacity 
+                style={styles.googleButton} 
+                onPress={handleGoogleSignIn}
+                activeOpacity={0.8}
+              >
+              <View style={styles.googleIconContainer}>
+              <Image
+                  source={require('../assets/google.png')} 
+                  style={styles.googleIconImage}
+              />
+              </View>
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
             </Animated.View>
           </ScrollView>
         </SafeAreaView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -212,8 +266,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradient: {
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  contentContainer: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -269,11 +332,13 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '900', // Stronger boldness
     color: '#333333',
     textAlign: 'center',
     marginBottom: 5,
+    letterSpacing: 0.5, // optional, makes bold text cleaner
   },
+  
   welcomeSubtitle: {
     fontSize: 14,
     color: '#666666',
@@ -281,39 +346,50 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
+  
+  inputWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative',
+  },
+  
   inputLabel: {
     fontSize: 14,
     color: '#999999',
-    marginBottom: 8,
+    marginBottom: 2,
+    fontWeight: '400',
   },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-  },
+  
   textInput: {
-    flex: 1,
-    paddingVertical: 14,
     fontSize: 16,
-    color: '#333333',
+    fontWeight: '500',
+    color: '#222222',
+    paddingVertical: 6,
   },
+  
   checkIcon: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
+  
   eyeIcon: {
-    padding: 8,
+    position: 'absolute',
+    right: 14,
+    bottom: 14,
   },
-  eyeIconText: {
-    fontSize: 16,
-  },
+  
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -328,12 +404,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#333333',
     borderRadius: 4,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   checkmark: {
     fontSize: 12,
@@ -346,14 +422,17 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#E0D8F0',
-    fontWeight: '500',
+    color: '#333333',
+    fontWeight: '900',
   },
   signInButton: {
     backgroundColor: '#000000',
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     marginBottom: 12,
+  },
+  signInButtonDisabled: {
+    opacity: 0.6,
   },
   signInButtonText: {
     color: '#FFFFFF',
@@ -373,30 +452,35 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     fontSize: 14,
-    color: '#E0D8F0',
-    fontWeight: '500',
+    color: '#00000', // iOS blue for better visibility
+    fontWeight: '600',
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    backgroundColor: 'transparent', // no background
+    borderRadius: 12,
     paddingVertical: 14,
-    borderRadius: 8,
     marginBottom: 20,
   },
-  googleIcon: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4285F4',
-    marginRight: 12,
+  googleIconContainer: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  googleIconImage: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+  },
+  
   googleButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '900',
+    color: '#000000',
   },
 });
 
