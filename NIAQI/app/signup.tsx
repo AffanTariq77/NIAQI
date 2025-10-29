@@ -4,7 +4,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import { apiClient } from '@/lib/api-client';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -151,6 +151,15 @@ const SignUpScreen = () => {
 
             {/* Content */}
             <View style={styles.content}>
+              {/* Logo */}
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+
               {/* Title */}
               <Text style={styles.title}>Sign Up</Text>
 
@@ -221,7 +230,10 @@ const SignUpScreen = () => {
                 activeOpacity={0.8}
               >
                 <View style={styles.googleIconContainer}>
-                  <Text style={styles.googleIcon}>G</Text>
+                  <Image
+                    source={require('../assets/google.png')} 
+                    style={styles.googleIconImage}
+                  />
                 </View>
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
@@ -254,24 +266,31 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+    paddingTop: 50,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
   },
   backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#333333',
-    fontWeight: '300',
+    fontWeight: 'bold',
+    marginTop: -20,
   },
   headerTitleContainer: {
     flex: 1,
@@ -279,20 +298,35 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333333',
+    flex: 1,
+    textAlign: 'center',
   },
   headerSpacer: {
     width: 40,
   },
   content: {
-    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: -50,
+    marginTop: -50,
+  },
+  logo: {
+    width: 260,
+    height: 260,
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '900',
     color: '#333333',
+    textAlign: 'center',
     marginBottom: 24,
+    letterSpacing: 0.5,
   },
   signInContainer: {
     flexDirection: 'row',
@@ -307,40 +341,34 @@ const styles = StyleSheet.create({
   },
   signInLink: {
     fontSize: 14,
-    color: '#007AFF', // iOS blue for better visibility
+    color: '#000000',
     fontWeight: '600',
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingVertical: 16,
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingVertical: 14,
+    marginBottom: 20,
   },
   googleIconContainer: {
-    width: 20,
-    height: 20,
-    marginRight: 12,
+    width: 24,
+    height: 24,
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  googleIcon: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4285F4',
+  googleIconImage: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
   googleButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
+    fontWeight: '900',
+    color: '#000000',
   },
 });
 

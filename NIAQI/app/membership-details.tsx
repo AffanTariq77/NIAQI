@@ -1,9 +1,9 @@
-import GradientBackground from '@/components/GradientBackground';
+import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Feature {
@@ -109,8 +109,12 @@ const MembershipDetailsScreen = () => {
   );
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
+      <SafeAreaView style={styles.contentContainer}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -131,7 +135,7 @@ const MembershipDetailsScreen = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </GradientBackground>
+    </View>
   );
 };
 
@@ -139,12 +143,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    zIndex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'transparent',
+    paddingTop: 50,
+    paddingBottom: 10,
   },
   backButton: {
     width: 40,
@@ -155,7 +171,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333333',
     textAlign: 'center',
   },

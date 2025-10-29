@@ -20,23 +20,28 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
       <View style={styles.inputWrapper}>
+        {label && <Text style={styles.label}>{label}</Text>}
         <TextInput
           style={styles.input}
-          placeholderTextColor="#999999"
+          placeholderTextColor="#B0B0B0"
           secureTextEntry={secureTextEntry}
           {...textInputProps}
         />
         {showCheck && (
-          <Text style={styles.checkIcon}>✓</Text>
+          <Ionicons 
+            name="checkmark" 
+            size={20} 
+            color="#000000" 
+            style={styles.checkIcon} 
+          />
         )}
         {showPasswordToggle && (
           <TouchableOpacity onPress={onPasswordToggle} style={styles.eyeIcon}>
             <Ionicons
               name={secureTextEntry ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color="#666666"
+              size={22}
+              color="#000000"
             />
           </TouchableOpacity>
         )}
@@ -49,39 +54,41 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
   },
+  inputWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative',
+  },
   label: {
     fontSize: 14,
     color: '#999999',
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: 2,
+    fontWeight: '400',
   },
   input: {
-    flex: 1,
-    paddingVertical: 14,
     fontSize: 16,
-    color: '#333333',
+    fontWeight: '500',
+    color: '#222222',
+    paddingVertical: 6,
   },
   checkIcon: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
-    marginLeft: 8,
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
   eyeIcon: {
-    padding: 4,
+    position: 'absolute',
+    right: 14,
+    bottom: 14,
   },
 });
 

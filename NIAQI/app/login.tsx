@@ -1,5 +1,6 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { useAuth } from '@/lib/auth-context';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -155,50 +156,53 @@ const LoginScreen = () => {
               <Text style={styles.welcomeTitle}>Welcome Back!</Text>
               <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
 
-              {/* Email Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={email}
-                    onChangeText={handleEmailChange}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#999999"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {emailValid && email.length > 0 && (
-                    <Text style={styles.checkIcon}>✓</Text>
-                  )}
-                </View>
-              </View>
+             {/* Email Input */}
+<View style={styles.inputContainer}>
+  <View style={styles.inputWrapper}>
+    <Text style={styles.inputLabel}>Email</Text>
+    <TextInput
+      style={styles.textInput}
+      value={email}
+      onChangeText={handleEmailChange}
+      placeholder="Enter your email"
+      placeholderTextColor="#B0B0B0"
+      keyboardType="email-address"
+      autoCapitalize="none"
+      autoCorrect={false}
+    />
+    {emailValid && email.length > 0 && (
+      <Ionicons name="checkmark" size={20} color="#000000" style={styles.checkIcon} />
+    )}
+  </View>
+</View>
 
-              {/* Password Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#999999"
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
-                    <Text style={styles.eyeIconText}>
-                      {showPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+{/* Password Input */}
+<View style={styles.inputContainer}>
+  <View style={styles.inputWrapper}>
+    <Text style={styles.inputLabel}>Password</Text>
+    <TextInput
+      style={styles.textInput}
+      value={password}
+      onChangeText={setPassword}
+      placeholder="Enter your password"
+      placeholderTextColor="#B0B0B0"
+      secureTextEntry={!showPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+    />
+    <TouchableOpacity
+      onPress={() => setShowPassword(!showPassword)}
+      style={styles.eyeIcon}
+    >
+      <Ionicons
+        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+        size={22}
+        color="#000000"
+      />
+    </TouchableOpacity>
+  </View>
+</View>
+
 
               {/* Remember Me & Forgot Password */}
               <View style={styles.optionsContainer}>
@@ -237,9 +241,18 @@ const LoginScreen = () => {
               </View>
 
               {/* Google Sign In Button */}
-              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-                <Text style={styles.googleIcon}>G</Text>
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <TouchableOpacity 
+                style={styles.googleButton} 
+                onPress={handleGoogleSignIn}
+                activeOpacity={0.8}
+              >
+              <View style={styles.googleIconContainer}>
+              <Image
+                  source={require('../assets/google.png')} 
+                  style={styles.googleIconImage}
+              />
+              </View>
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
             </Animated.View>
           </ScrollView>
@@ -319,11 +332,13 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '900', // Stronger boldness
     color: '#333333',
     textAlign: 'center',
     marginBottom: 5,
+    letterSpacing: 0.5, // optional, makes bold text cleaner
   },
+  
   welcomeSubtitle: {
     fontSize: 14,
     color: '#666666',
@@ -331,39 +346,50 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
+  
+  inputWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative',
+  },
+  
   inputLabel: {
     fontSize: 14,
     color: '#999999',
-    marginBottom: 8,
+    marginBottom: 2,
+    fontWeight: '400',
   },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-  },
+  
   textInput: {
-    flex: 1,
-    paddingVertical: 14,
     fontSize: 16,
-    color: '#333333',
+    fontWeight: '500',
+    color: '#222222',
+    paddingVertical: 6,
   },
+  
   checkIcon: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
+  
   eyeIcon: {
-    padding: 8,
+    position: 'absolute',
+    right: 14,
+    bottom: 14,
   },
-  eyeIconText: {
-    fontSize: 16,
-  },
+  
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -378,12 +404,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#333333',
     borderRadius: 4,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   checkmark: {
     fontSize: 12,
@@ -396,13 +422,13 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#E0D8F0',
-    fontWeight: '500',
+    color: '#333333',
+    fontWeight: '900',
   },
   signInButton: {
     backgroundColor: '#000000',
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     marginBottom: 12,
   },
   signInButtonDisabled: {
@@ -426,30 +452,35 @@ const styles = StyleSheet.create({
   },
   signUpLink: {
     fontSize: 14,
-    color: '#007AFF', // iOS blue for better visibility
+    color: '#00000', // iOS blue for better visibility
     fontWeight: '600',
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    backgroundColor: 'transparent', // no background
+    borderRadius: 12,
     paddingVertical: 14,
-    borderRadius: 8,
     marginBottom: 20,
   },
-  googleIcon: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4285F4',
-    marginRight: 12,
+  googleIconContainer: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  googleIconImage: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+  },
+  
   googleButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '900',
+    color: '#000000',
   },
 });
 

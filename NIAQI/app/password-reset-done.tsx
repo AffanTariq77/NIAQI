@@ -2,7 +2,7 @@ import BackgroundGradient from '@/components/BackgroundGradient';
 import PrimaryButton from '@/components/PrimaryButton';
 import { router } from 'expo-router';
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PasswordResetDoneScreen = () => {
@@ -13,6 +13,7 @@ const PasswordResetDoneScreen = () => {
 
   return (
     <View style={styles.wrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.backgroundContainer}>
         <BackgroundGradient />
       </View>
@@ -72,11 +73,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   successMessage: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 28,
+    fontWeight: '900',
     color: '#333333',
     textAlign: 'center',
     marginBottom: 40,
+    letterSpacing: 0.5,
   },
   buttonContainer: {
     width: '100%',

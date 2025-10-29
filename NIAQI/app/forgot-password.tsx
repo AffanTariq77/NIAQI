@@ -1,6 +1,5 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import CustomTextInput from '@/components/CustomTextInput';
-import PrimaryButton from '@/components/PrimaryButton';
 import { apiClient } from '@/lib/api-client';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -97,12 +96,15 @@ const ForgotPasswordScreen = () => {
                 showCheck={emailValid}
               />
 
-              <PrimaryButton
-                title="Send"
+              <TouchableOpacity 
+                style={[styles.sendButton, (!emailValid || isLoading) && styles.sendButtonDisabled]} 
                 onPress={handleSend}
-                loading={isLoading}
-                disabled={!emailValid}
-              />
+                disabled={!emailValid || isLoading}
+              >
+                <Text style={styles.sendButtonText}>
+                  {isLoading ? 'Sending...' : 'Send'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -132,24 +134,31 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    justifyContent: 'center',
+    paddingTop: 50,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
   },
   backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backIcon: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#333333',
-    fontWeight: '300',
+    fontWeight: 'bold',
+    marginTop: -20,
   },
   headerTitleContainer: {
     flex: 1,
@@ -157,20 +166,40 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333333',
+    flex: 1,
+    textAlign: 'center',
   },
   headerSpacer: {
     width: 40,
   },
   content: {
-    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   instructions: {
     fontSize: 14,
     color: '#666666',
     lineHeight: 20,
     marginBottom: 24,
+    textAlign: 'center',
+  },
+  sendButton: {
+    backgroundColor: '#000000',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    opacity: 0.6,
+  },
+  sendButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
