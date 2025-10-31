@@ -1,8 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
@@ -11,8 +11,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#000000',
-        tabBarInactiveTintColor: '#999999',
+        tabBarActiveTintColor: '#5A7CFF',
+        tabBarInactiveTintColor: '#777777',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
@@ -20,34 +20,48 @@ export default function TabLayout() {
           paddingBottom: 8,
           paddingTop: 8,
           backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(255, 255, 255, 0.8)',
+          shadowColor: '#E4E4E4',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
         },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="house.fill" color={focused ? '#000000' : '#999999'} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={26} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="magnifyingglass" color={focused ? '#000000' : '#999999'} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={26} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="courses"
         options={{
           title: 'My Courses',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="book.fill" color={focused ? '#000000' : '#999999'} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'book' : 'book-outline'} size={26} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="person.fill" color={focused ? '#000000' : '#999999'} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={26} color={color} />
+          ),
         }}
       />
     </Tabs>
