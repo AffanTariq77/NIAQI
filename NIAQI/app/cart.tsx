@@ -1,54 +1,128 @@
-import GradientBackground from '@/components/GradientBackground';
+import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  Animated,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+type CartItem = {
+  id: string;
+  title: string;
+  currentPrice: number;
+  oldPrice?: number;
+};
+
 const CartScreen = () => {
-  const itemCost = 199;
-  const discount = 1;
-  const totalPrice = 198;
+  const swipeRefs = useRef<Record<string, Swipeable | null>>({});
+  const [items, setItems] = useState<CartItem[]>([
+    { id: '1', title: 'NIAQI Basic Membership', currentPrice: 99, oldPrice: 199 },
+    { id: '2', title: 'NIAQI Premium Membership', currentPrice: 198, oldPrice: 299 },
+  ]);
+
+  const itemCost = items.reduce((sum, it) => sum + it.currentPrice, 0);
+  const discount = 0;
+  const totalPrice = itemCost - discount;
 
   const handleCheckout = () => {
-    // Navigate to membership details or success screen
     router.push('/membership-details');
   };
 
+  const handleDelete = (id: string) => {
+    setItems(prev => prev.filter(it => it.id !== id));
+  };
+
+  // Gmail-style swipe-to-delete background
+  const renderRightActions = (id: string, dragX: Animated.AnimatedInterpolation<number>) => {
+    const backgroundColor = dragX.interpolate({
+      inputRange: [-120, 0],
+      outputRange: ['#000000', 'transparent'],
+      extrapolate: 'clamp',
+    });
+
+    const iconScale = dragX.interpolate({
+      inputRange: [-120, -60, 0],
+      outputRange: [1.2, 1, 0.5],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View style={[styles.swipeBackground, { backgroundColor }]}>
+        <Animated.View style={[styles.deleteButtonAnimated, { transform: [{ scale: iconScale }] }]}> 
+          <TouchableOpacity onPress={() => handleDelete(id)} activeOpacity={0.8}>
+            <Ionicons name="trash-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
+      </Animated.View>
+    );
+  };
+
   return (
-    <GradientBackground>
-      <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <View style={styles.backgroundFlip}>
+          <BackgroundGradient />
+        </View>
+      </View>
+
+      <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333333" />
+            <Ionicons name="arrow-back" size={22} color="#333" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Cart</Text>
-          <View style={styles.headerSpacer} />
+          <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.itemsCountText}>Items in cart: 1</Text>
+        {/* Scroll content */}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.itemsCountText}>Items in cart: {items.length}</Text>
 
-          {/* Cart Item */}
-          <View style={styles.cartItem}>
-            <View style={styles.itemImage}>
-              <View style={styles.imagePlaceholder} />
-            </View>
-            <View style={styles.itemContent}>
-              <Text style={styles.itemTitle}>NIAQI Basic Membership</Text>
-              <Text style={styles.itemPrice}>$199 / $299</Text>
-            </View>
-            <TouchableOpacity style={styles.deleteButton}>
-              <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
+          {items.map((item) => (
+            <Swipeable
+              key={item.id}
+              ref={(ref) => {
+                swipeRefs.current[item.id] = ref;
+              }}
+              renderRightActions={(progress, dragX) => renderRightActions(item.id, dragX)}
+              overshootRight={false}
+              rightThreshold={72}
+              friction={2.5}
+              onSwipeableRightOpen={() => {
+                // Close first to avoid background flicker, then delete
+                swipeRefs.current[item.id]?.close();
+                setTimeout(() => handleDelete(item.id), 120);
+              }}
+            >
+              <View style={styles.cartItem}>
+                <View style={styles.imageBox}>
+                  <View style={styles.imagePlaceholder} />
+                </View>
+                <View style={styles.itemContent}>
+                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  <Text style={styles.priceRow}>
+                    <Text style={styles.currentPrice}>${item.currentPrice}</Text>
+                    <Text style={styles.slashText}> / </Text>
+                    <Text style={styles.oldPrice}>${item.oldPrice}</Text>
+                  </Text>
+                </View>
+              </View>
+            </Swipeable>
+          ))}
+        </ScrollView>
 
-          {/* Summary Box */}
+        {/* Bottom summary */}
+        <View style={styles.bottomArea}>
           <View style={styles.summaryBox}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Item Cost</Text>
@@ -60,173 +134,116 @@ const CartScreen = () => {
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total Price</Text>
-              <Text style={styles.totalValue}>${totalPrice}.00</Text>
+              <Text style={styles.totalValue}>${totalPrice}</Text>
             </View>
           </View>
-        </ScrollView>
 
-        {/* Checkout Button */}
-        <View style={styles.checkoutContainer}>
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={handleCheckout}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.checkoutButtonText}>Checkout</Text>
+          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout} activeOpacity={0.8}>
+            <Text style={styles.checkoutText}>Checkout</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </GradientBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  backgroundContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  backgroundFlip: { flex: 1, transform: [{ rotate: '180deg' }] },
+  safeArea: { flex: 1, paddingHorizontal: 20 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'transparent',
+    paddingTop: 48,
+    paddingBottom: 8,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333333',
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 20,
-  },
-  itemsCountText: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 16,
-  },
+  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', color: '#111' },
+
+  scrollContent: { paddingBottom: 100 },
+  itemsCountText: { fontSize: 16, color: '#111', marginBottom: 16, fontWeight: '600' },
+
   cartItem: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
-  itemImage: {
-    width: 60,
-    height: 60,
-    marginRight: 12,
+  imageBox: {
+    width: 70,
+    height: 70,
+    marginRight: 16,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F7',
   },
   imagePlaceholder: {
     flex: 1,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 8,
+    borderRadius: 12,
+    backgroundColor: '#E8E8EA',
   },
-  itemContent: {
+  itemContent: { flex: 1, justifyContent: 'center' },
+  itemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 6,
+    letterSpacing: -0.2,
+  },
+  priceRow: { flexDirection: 'row', alignItems: 'center' },
+  currentPrice: { fontSize: 13, color: '#5A7CFF', fontWeight: '600' },
+  slashText: { color: '#8E8E93', fontSize: 13 },
+  oldPrice: { color: '#8E8E93', fontSize: 13, textDecorationLine: 'line-through' },
+
+  swipeBackground: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'flex-end',
+    borderRadius: 16,
+    marginBottom: 16,
+    paddingRight: 24,
   },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    marginBottom: 4,
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  deleteButton: {
-    backgroundColor: '#333333',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  deleteButtonAnimated: {
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  bottomArea: { paddingBottom: 24 },
   summaryBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    marginBottom: 16,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: '#333333',
-    fontWeight: '500',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingTop: 12,
-    marginTop: 8,
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333333',
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333333',
-  },
-  checkoutContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'transparent',
-  },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  summaryLabel: { fontSize: 14, color: '#666' },
+  summaryValue: { fontSize: 14, fontWeight: '500', color: '#333' },
+  totalRow: { borderTopWidth: 1, borderTopColor: '#E5E5E5', paddingTop: 10, marginTop: 6 },
+  totalLabel: { fontSize: 16, fontWeight: '600', color: '#111' },
+  totalValue: { fontSize: 16, fontWeight: '700', color: '#111' },
+
   checkoutButton: {
     backgroundColor: '#007BFF',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  checkoutButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  checkoutText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
 export default CartScreen;
-
