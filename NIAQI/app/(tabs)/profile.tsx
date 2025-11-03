@@ -1,9 +1,9 @@
-import GradientBackground from '@/components/GradientBackground';
+import BackgroundGradient from '@/components/BackgroundGradient';
 import { useAuth } from '@/lib/auth-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProfileScreen = () => {
@@ -20,115 +20,132 @@ const ProfileScreen = () => {
       title: 'Notification',
       subtitle: 'Ringtone, message, notification',
       icon: 'notifications-outline',
-      color: '#4299E1',
     },
     {
       id: 'language',
       title: 'Language',
       subtitle: 'English',
-      icon: 'language-outline',
-      color: '#4299E1',
+      icon: 'globe-outline',
     },
     {
       id: 'help',
       title: 'Help',
       subtitle: 'Contact us',
-      icon: 'help-circle-outline',
-      color: '#4299E1',
+      icon: 'chatbubble-outline',
     },
     {
       id: 'about',
       title: 'About',
       subtitle: 'About the application',
       icon: 'information-circle-outline',
-      color: '#4299E1',
-    },
-    {
-      id: 'logout',
-      title: 'Log Out',
-      subtitle: 'Log out the account',
-      icon: 'log-out-outline',
-      color: '#FF3B30',
-      action: handleLogout,
     },
   ];
 
   return (
-    <GradientBackground>
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
+      
       <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerButton} />
-            <Text style={styles.headerTitle}>Profile</Text>
-            <View style={styles.headerButton} />
-          </View>
-
-          {/* User Info */}
-          <View style={styles.userSection}>
-            <View style={styles.avatarContainer}>
+          {/* User Info Card */}
+          <View style={styles.userCard}>
+            <View style={styles.userCardContent}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </Text>
+                <Ionicons name="person" size={40} color="#999" />
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName}>{user?.name || 'Heather Delaporte'}</Text>
+                <Text style={styles.userEmail}>{user?.email || 'heather.ues@gmail.com'}</Text>
               </View>
             </View>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
             <TouchableOpacity style={styles.editButton}>
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Settings List */}
-          <View style={styles.settingsList}>
-            {settingsItems.map((item) => (
+          {/* Settings Group */}
+          <View style={styles.settingsGroup}>
+            {settingsItems.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.settingsItem}
-                onPress={item.action}
+                style={[
+                  styles.settingsItem,
+                  index === settingsItems.length - 1 && styles.settingsItemLast
+                ]}
                 activeOpacity={0.7}
               >
-                <View style={styles.settingsItemLeft}>
-                  <View style={[styles.settingsIcon, { backgroundColor: `${item.color}20` }]}>
-                    <Ionicons name={item.icon} size={24} color={item.color} />
-                  </View>
-                  <View style={styles.settingsItemContent}>
+                <View style={styles.settingsItemContent}>
+                  <Ionicons name={item.icon} size={24} color="#333" style={styles.settingsIcon} />
+                  <View style={styles.settingsTextContainer}>
                     <Text style={styles.settingsItemTitle}>{item.title}</Text>
                     <Text style={styles.settingsItemSubtitle}>{item.subtitle}</Text>
                   </View>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#999999" />
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* Logout */}
+          <View style={styles.logoutContainer}>
+            <TouchableOpacity
+              style={styles.logoutItem}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <View style={styles.settingsItemContent}>
+                <Ionicons name="log-out-outline" size={24} color="#FF3B30" style={styles.settingsIcon} />
+                <View style={styles.settingsTextContainer}>
+                  <Text style={styles.logoutTitle}>Log Out</Text>
+                  <Text style={styles.settingsItemSubtitle}>Log out the account</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </SafeAreaView>
-    </GradientBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   container: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
-  headerButton: {
+  backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
@@ -138,47 +155,57 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: '#333333',
+    color: '#000',
     textAlign: 'center',
   },
-  userSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+  headerSpacer: {
+    width: 40,
   },
-  avatarContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 40,
+  },
+  userCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  userCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#E4ECFF',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#E0E0E0',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginRight: 16,
   },
-  avatarText: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#4299E1',
+  userInfo: {
+    flex: 1,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 4,
   },
   userEmail: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 24,
+    fontSize: 14,
+    color: '#666',
   },
   editButton: {
     paddingHorizontal: 24,
@@ -186,54 +213,72 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    alignSelf: 'flex-start',
   },
   editButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#4299E1',
+    fontWeight: '500',
+    color: '#333',
   },
-  settingsList: {
-    paddingHorizontal: 20,
+  settingsGroup: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
   },
   settingsItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  settingsItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  settingsIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  settingsItemLast: {
+    borderBottomWidth: 0,
   },
   settingsItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingsIcon: {
+    marginRight: 16,
+  },
+  settingsTextContainer: {
     flex: 1,
   },
   settingsItemTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
+    color: '#1C1C1E',
     marginBottom: 4,
   },
   settingsItemSubtitle: {
-    fontSize: 12,
-    color: '#999999',
+    fontSize: 13,
+    color: '#8E8E93',
+  },
+  logoutContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  logoutItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  logoutTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF3B30',
+    marginBottom: 4,
   },
 });
 

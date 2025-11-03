@@ -5,14 +5,14 @@ import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const CourseCompletionScreen = () => {
-  const handleLeaveFeedback = () => {
-    router.push('/leave-review');
+const CertificateDownloadScreen = () => {
+  const handleDownloadCertificate = () => {
+    // Handle certificate download logic
+    console.log('Downloading certificate...');
   };
 
-  const handleDownloadCertificate = () => {
-    // Navigate to certificate download confirmation
-    router.push('/certificate-download');
+  const handleLeaveFeedback = () => {
+    router.push('/leave-review');
   };
 
   return (
@@ -31,9 +31,9 @@ const CourseCompletionScreen = () => {
         </View>
 
         <View style={styles.content}>
-          {/* Running Figure Icon */}
+          {/* Trophy Icon */}
           <View style={styles.iconContainer}>
-            <Ionicons name="ribbon" size={180} color="#5B21B6" />
+            <Ionicons name="trophy" size={180} color="#5B21B6" />
           </View>
 
           {/* Title */}
@@ -41,18 +41,21 @@ const CourseCompletionScreen = () => {
 
           {/* Message */}
           <Text style={styles.message}>
-            You have successfully completed the course! We wish you new victories, participation and
-            success in all your endeavors!
+            You have received a course completion certificate.
           </Text>
 
-          {/* Leave Feedback Button */}
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLeaveFeedback} activeOpacity={0.8}>
-            <Text style={styles.primaryButtonText}>Leave Feedback</Text>
+          {/* Download Certificate Button */}
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleDownloadCertificate}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.primaryButtonText}>Download Certificate</Text>
           </TouchableOpacity>
 
-          {/* Download Certificate Link */}
-          <TouchableOpacity style={styles.linkButton} onPress={handleDownloadCertificate}>
-            <Text style={styles.linkButtonText}>Download Certificate</Text>
+          {/* Leave Feedback Link */}
+          <TouchableOpacity style={styles.linkButton} onPress={handleLeaveFeedback}>
+            <Text style={styles.linkButtonText}>Leave A Feedback</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -135,4 +138,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CourseCompletionScreen;
+export default CertificateDownloadScreen;
+

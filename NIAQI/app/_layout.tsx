@@ -32,9 +32,14 @@ export default function RootLayout() {
             <Stack.Screen name="membership-details" options={{ headerShown: false }} />
             <Stack.Screen name="course-details" options={{ headerShown: false }} />
             <Stack.Screen name="course-completion" options={{ headerShown: false }} />
+            <Stack.Screen name="certificate-download" options={{ headerShown: false }} />
             <Stack.Screen name="leave-review" options={{ headerShown: false }} />
             <Stack.Screen name="student-base-data" options={{ headerShown: false }} />
             <Stack.Screen name="student-info" options={{ headerShown: false }} />
+            <Stack.Screen name="forum-student-page" options={{ headerShown: false }} />
+            <Stack.Screen name="course-reminder-discounts" options={{ headerShown: false }} />
+            <Stack.Screen name="sponsor-discounts" options={{ headerShown: false }} />
+            <Stack.Screen name="upgrade" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>

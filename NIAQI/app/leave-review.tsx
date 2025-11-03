@@ -1,102 +1,101 @@
-import GradientBackground from '@/components/GradientBackground';
+import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LeaveReviewScreen = () => {
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
   const handleSubmit = () => {
     // Handle review submission
+    console.log('Rating:', rating, 'Comment:', comment);
     router.back();
   };
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="#333333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Leave A Review</Text>
-            <View style={styles.headerSpacer} />
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
+      <View style={styles.backgroundContainer}>
+        <BackgroundGradient />
+      </View>
+
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color="#5B21B6" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Leave A Review</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.content}>
+          {/* Title */}
+          <Text style={styles.title}>Please Rate The Course!</Text>
+
+          {/* Star Rating */}
+          <View style={styles.starsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7}>
+                <Ionicons
+                  name={star <= rating ? 'star' : 'star-outline'}
+                  size={48}
+                  color="#5B21B6"
+                />
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            <Text style={styles.title}>Please Rate The Course!</Text>
-            
-            {/* Star Rating */}
-            <View style={styles.starsContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity
-                  key={star}
-                  onPress={() => setRating(star)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name={star <= rating ? "star" : "star-outline"}
-                    size={48}
-                    color={star <= rating ? "#FFC107" : "#E0E0E0"}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Your comments and suggestions help us imprave the service quality better!
+          </Text>
 
-            <Text style={styles.subtitle}>
-              Your comments and suggestions help us improve the service quality better!
-            </Text>
+          {/* Comment Input */}
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Enter your comment"
+            placeholderTextColor="#999"
+            multiline
+            numberOfLines={6}
+            value={comment}
+            onChangeText={setComment}
+            textAlignVertical="top"
+          />
 
-            {/* Comment Input */}
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Enter your comment..."
-              placeholderTextColor="#999999"
-              multiline
-              numberOfLines={8}
-              value={comment}
-              onChangeText={setComment}
-            />
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleSubmit}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} activeOpacity={0.8}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-    </GradientBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+  backgroundContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   container: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   backButton: {
     width: 40,
@@ -108,7 +107,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: '#333333',
+    color: '#5B21B6',
     textAlign: 'center',
   },
   headerSpacer: {
@@ -116,48 +115,54 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 60,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-    textAlign: 'center',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#5B21B6',
     marginBottom: 32,
+    textAlign: 'center',
   },
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     marginBottom: 32,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666666',
+    color: '#5B21B6',
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 20,
+    paddingHorizontal: 20,
   },
   commentInput: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    minHeight: 120,
-    fontSize: 16,
-    color: '#333333',
-    textAlignVertical: 'top',
-    marginBottom: 24,
+    width: '100%',
+    minHeight: 140,
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 32,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   submitButton: {
     backgroundColor: '#000000',
     paddingVertical: 16,
+    paddingHorizontal: 64,
     borderRadius: 12,
     alignItems: 'center',
     shadowColor: '#000',
@@ -169,9 +174,8 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
 
 export default LeaveReviewScreen;
-

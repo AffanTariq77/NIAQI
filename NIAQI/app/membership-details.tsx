@@ -60,30 +60,29 @@ const features = [
     bgColor: '#54DAE2',
     height: CARD_HEIGHT,
     images: [
-      {
-        source: require('../assets/54DAE2.png'),
-        style: {
-          width: 110,
-          height: 110,
-          alignSelf: 'absolute' as const,
-          bottom: 60,
-          right: -15,
-          opacity: 0.9,
-          transform: [{ rotate: '-15deg' }],
+        {
+          source: require('../assets/54DAE2.png'),
+          style: {
+            width: 110,
+            height: 110,
+            position: 'absolute' as const,
+            bottom: 60,
+            right: -15,
+            opacity: 0.9,
+            transform: [{ rotate: '-15deg' }],
+          },
         },
-      },
-      {
-        source: require('../assets/54DAE2b.png'),
-        style: {
-          width: 80,
-          height: 80,
-          alignSelf: 'absolute' as const,
-          bottom: 10,
-          right: 60,
-        
-          opacity: 0.85,
+        {
+          source: require('../assets/54DAE2b.png'),
+          style: {
+            width: 80,
+            height: 80,
+            position: 'absolute' as const,
+            bottom: 10,
+            right: 60,
+            opacity: 0.85,
+          },
         },
-      },
     ],
     imageStyle: {
       width: 130,
@@ -144,7 +143,7 @@ const features = [
     imageStyle: {
       width: 350,
       height: 350,
-      alignSelf: 'absolute' as const,
+      position: 'absolute' as const,
       bottom: -130,
       right: -130,
       opacity: 0.85,
@@ -194,7 +193,7 @@ const features = [
     imageStyle: {
       width: 350,
       height: 350,
-      alignSelf: 'absolute' as const,
+      position: 'absolute' as const,
       bottom: -130,
       right: -130,
       opacity: 0.85,
@@ -204,9 +203,18 @@ const features = [
 
 const MembershipDetailsScreen = () => {
   const handleFeaturePress = (feature: any) => {
-    if (!feature.unlocked) return;
+    if (!feature.unlocked) {
+      router.push('/upgrade');
+      return;
+    }
     if (feature.id === '1') {
       router.push('/student-base-data');
+    } else if (feature.id === '2') {
+      router.push('/forum-student-page');
+    } else if (feature.id === '3') {
+      router.push('/course-reminder-discounts');
+    } else if (feature.id === '4') {
+      router.push('/sponsor-discounts');
     }
   };
 
@@ -235,7 +243,6 @@ const MembershipDetailsScreen = () => {
               key={feature.id}
               onPress={() => handleFeaturePress(feature)}
               activeOpacity={0.9}
-              disabled={!feature.unlocked}
               style={[
                 styles.cardWrapper,
                 { height: feature.height, backgroundColor: feature.bgColor },
