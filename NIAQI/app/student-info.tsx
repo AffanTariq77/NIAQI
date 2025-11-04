@@ -188,11 +188,13 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 28,
     backgroundColor: '#DDACE5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: 'rgb(0, 0, 0)',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: 10,
+    borderColor:'rgb(61, 58, 58)',
     elevation: 6,
+    marginTop:10,
     position: 'relative',
   },
 
@@ -253,7 +255,6 @@ const styles = StyleSheet.create({
 
   /** Name Section **/
   nameSection: {
-    backgroundColor: '#EDEAF3',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',

@@ -21,13 +21,6 @@ const UpgradeScreen = () => {
       </View>
 
       <View style={styles.container}>
-        {/* Back Button */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={handleClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color="#000" />
-          </TouchableOpacity>
-        </View>
-
         {/* Modal Content */}
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -65,18 +58,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     zIndex: 1,
-    paddingTop: 50,
-  },
-  topBar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
     justifyContent: 'center',
-    alignItems: 'flex-start',
   },
   modalContainer: {
     flex: 1,

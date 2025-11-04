@@ -3,15 +3,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -153,8 +153,6 @@ const ForumStudentPage = () => {
                 placeholderTextColor="#999"
                 value={newComment}
                 onChangeText={setNewComment}
-                multiline
-                numberOfLines={3}
               />
               <View style={styles.inputActions}>
                 <TouchableOpacity style={styles.iconButton}>
@@ -249,7 +247,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 10,
+    marginTop:15,
+
   },
   commentCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     fontSize: 14,
     color: '#333',
-    minHeight: 80,
+    minHeight: 20,
     maxHeight: 120,
     textAlignVertical: 'top',
   },
@@ -332,19 +332,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconButton: {
-    padding: 8,
+    padding: 4,
   },
   postButton: {
     marginLeft: 'auto',
     backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   postButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '400',
   },
 });
 
