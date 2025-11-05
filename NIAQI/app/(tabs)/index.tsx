@@ -2,11 +2,11 @@ import BackgroundGradient from '@/components/BackgroundGradient';
 import { useAuth } from '@/lib/auth-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { BlurMask, Canvas, Circle } from '@shopify/react-native-skia';
+import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Image,
   Platform,
   ScrollView,
   StatusBar,
@@ -86,45 +86,47 @@ const CourseCard: React.FC<CourseCardProps> = ({
   onToggle,
   onStartNow,
 }) => (
-  <View style={{ marginBottom: 40 }}>
-    <LinearGradient
-      colors={['#FFFFFF', '#F7F8FF', '#FDF5FA']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.courseCard}
-    >
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.8}>
-        <View style={styles.cardHeader}>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingValue}>{membership.rating}</Text>
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Ionicons name="star-half" size={16} color="#FFD700" />
-            <Text style={styles.ratingCount}>({membership.ratingCount})</Text>
-          </View>
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={22}
-            color="#777"
-          />
-        </View>
-
-        <Text style={styles.courseTitle}>{membership.title}</Text>
-        <Text style={styles.coursePrice}>{membership.price}</Text>
-      </TouchableOpacity>
-
-      {isExpanded && (
-        <View style={styles.expandedContent}>
-          {membership.features.map((feature, index) => (
-            <View key={index} style={styles.featureRow}>
-              <Ionicons name="checkmark-circle" size={18} color="#5A7CFF" />
-              <Text style={styles.featureText}>{feature}</Text>
+  <View style={{ marginBottom: isExpanded ? 36 : 16, overflow: 'visible' }}>
+    <View style={{ overflow: 'visible' }}>
+      <LinearGradient
+        colors={['#FFFFFF', '#F7F8FF', '#FDF5FA']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.courseCard}
+      >
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.8}>
+          <View style={styles.cardHeader}>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingValue}>{membership.rating}</Text>
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Ionicons name="star-half" size={16} color="#FFD700" />
+              <Text style={styles.ratingCount}>({membership.ratingCount})</Text>
             </View>
-          ))}
-        </View>
-      )}
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={22}
+              color="#777"
+            />
+          </View>
+
+          <Text style={styles.courseTitle}>{membership.title}</Text>
+          <Text style={styles.coursePrice}>{membership.price}</Text>
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            {membership.features.map((feature, index) => (
+              <View key={index} style={styles.featureRow}>
+                <Ionicons name="checkmark-circle" size={18} color="#5A7CFF" />
+                <Text style={styles.featureText}>{feature}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </LinearGradient>
 
       {isExpanded && (
         <View style={styles.startNowWrapper}>
@@ -140,7 +142,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           </TouchableOpacity>
         </View>
       )}
-    </LinearGradient>
+    </View>
   </View>
 );
 
@@ -242,11 +244,13 @@ const HomeScreen = () => {
               )}
 
               {/* Background image on the right */}
-              <Image
+              <ExpoImage
                 source={require('../../assets/mould2.png')}
                 style={styles.nextClassImage}
-                resizeMode="contain"
-                accessible={false}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                priority="high"
+                transition={150}
               />
               <View style={styles.nextClassContent}>
                 <View style={styles.nextClassTextContainer}>
@@ -442,6 +446,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 16,
+    paddingBottom: 28,
     shadowColor: '#B3B3B3',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
@@ -450,6 +455,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(206, 202, 202, 0.5)',
     backgroundColor: '#FFFFFF',
+    overflow: 'visible',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -472,16 +478,22 @@ const styles = StyleSheet.create({
   featureText: { fontSize: 14, color: '#333333', marginLeft: 10 },
   startNowWrapper: {
     position: 'absolute',
-    bottom: -20,
-    alignSelf: 'center',
+    bottom: -22,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   startNowButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 48,
+    paddingVertical: 14,
+    paddingHorizontal: 52,
     borderRadius: 150,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
+    shadowColor: '#5A7CFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   startNowText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });

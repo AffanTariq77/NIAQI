@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.niaqi.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow NIAQI to access your photos",
+        "NSCameraUsageDescription": "Allow NIAQI to use your camera"
+      }
     },
     "android": {
       "adaptiveIcon": {

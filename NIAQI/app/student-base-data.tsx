@@ -1,9 +1,10 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Student {
@@ -123,7 +124,14 @@ const StudentBaseDataScreen = () => {
                 {/* Profile Image */}
                 <View style={styles.profileImageContainer}>
                   {student.avatar ? (
-                    <Image source={student.avatar} style={styles.profileImage} resizeMode="cover" />
+                    <Image 
+                      source={student.avatar} 
+                      style={styles.profileImage} 
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      priority="high"
+                      transition={200}
+                    />
                   ) : (
                     <View style={styles.profilePlaceholder}>
                       <Ionicons name="person" size={50} color="#999" />

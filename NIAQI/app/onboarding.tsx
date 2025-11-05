@@ -1,7 +1,8 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Image,
+  Platform,
   StatusBar,
   StyleSheet,
   Text,
@@ -70,7 +71,28 @@ const onboardingData: OnboardingSlide[] = [
 
 const OnboardingScreen = () => {
   const [currentPage, setCurrentPage] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const currentSlide = onboardingData[currentPage];
+
+  // Preload all images on mount for instant transitions
+  useEffect(() => {
+    const preloadImages = async () => {
+      try {
+        // Only preload on iOS for smooth transitions
+        // Android handles on-demand loading better
+        if (Platform.OS === 'ios') {
+          await Promise.all(
+            onboardingData.map((slide) => Image.prefetch(slide.image))
+          );
+        }
+        setImagesLoaded(true);
+      } catch (error) {
+        console.warn('Image preload error:', error);
+        setImagesLoaded(true); // Continue anyway
+      }
+    };
+    preloadImages();
+  }, []);
 
   // Animation values for content transition
   const contentOpacity = useSharedValue(1);
@@ -239,12 +261,17 @@ const OnboardingScreen = () => {
               <Animated.View style={[styles.content, contentAnimatedStyle]}>
                 {/* Logo/Image */}
                 <View style={styles.imageContainer}>
-  <Image
-    source={currentSlide.image}
-    style={[styles.defaultImage, currentSlide.imageStyle]}
-    resizeMode="contain"
-  />
-</View>
+                  <Image
+                    source={currentSlide.image}
+                    style={[styles.defaultImage, currentSlide.imageStyle]}
+                    contentFit="contain"
+                    cachePolicy={Platform.OS === 'android' ? 'none' : 'memory-disk'}
+                    priority={Platform.OS === 'android' ? 'normal' : 'high'}
+                    transition={Platform.OS === 'android' ? 0 : 150}
+                    recyclingKey={`onboarding-${currentSlide.id}`}
+                    placeholder={Platform.OS === 'android' ? undefined : { blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4' }}
+                  />
+                </View>
                 {/* Title */}
                 <Text style={styles.title}>{currentSlide.title}</Text>
 

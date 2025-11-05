@@ -1,9 +1,10 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StudentInfoScreen = () => {
@@ -47,7 +48,10 @@ const StudentInfoScreen = () => {
                 <Image
                   source={require('../assets/student1.png')}
                   style={styles.profileImage}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  priority="high"
+                  transition={200}
                 />
               </View>
 

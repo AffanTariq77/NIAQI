@@ -1,8 +1,9 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Course {
@@ -112,7 +113,14 @@ const SearchScreen = () => {
                 {/* Thumbnail */}
                 <View style={styles.thumbnailContainer}>
                   {course.thumbnail ? (
-                    <Image source={course.thumbnail} style={styles.thumbnail} resizeMode="cover" />
+                    <Image 
+                      source={course.thumbnail} 
+                      style={styles.thumbnail} 
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      priority="high"
+                      transition={150}
+                    />
                   ) : (
                     <View style={styles.thumbnailPlaceholder} />
                   )}

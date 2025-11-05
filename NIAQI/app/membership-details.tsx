@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React from 'react';
 import {
   Dimensions,
-  Image,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -256,21 +256,33 @@ const MembershipDetailsScreen = () => {
                       key={index}
                       source={img.source}
                       style={[styles.cardBackgroundImage, img.style]}
-                      resizeMode="contain"
+                      contentFit="contain"
+                      cachePolicy="memory-disk"
+                      priority="normal"
+                      transition={150}
                     />
                   ))
                 ) : (
                   <Image
                     source={feature.background}
                     style={[styles.cardBackgroundImage, feature.imageStyle]}
-                    resizeMode="contain"
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                    priority="normal"
+                    transition={150}
                   />
                 )}
                 <View style={styles.textWrapper}>
                   <Text style={styles.cardText}>{feature.title}</Text>
                 </View>
                  {!feature.unlocked && (
-                   <Image source={require('../assets/lock.png')} style={styles.lockIcon} />
+                   <Image 
+                     source={require('../assets/lock.png')} 
+                     style={styles.lockIcon}
+                     contentFit="contain"
+                     cachePolicy="memory-disk"
+                     transition={100}
+                   />
                  )}
               </View>
             </TouchableOpacity>
