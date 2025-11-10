@@ -309,14 +309,7 @@ const HomeScreen = () => {
               <Text style={styles.nextClassTitle}>
                 {item.description}
               </Text>
-            </View>
-            
-            {/* Arrow Button */}
-            <View style={styles.arrowButtonContainer}>
-              <View style={styles.arrowButton}>
-                <Ionicons name="chevron-forward" size={24} color="#1C1C1E" />
-              </View>
-            </View>
+            </View>            
           </View>
         </LinearGradient>
       </View>
@@ -521,7 +514,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    height: 230,
+    height: 215,
   },
   paginationContainer: {
     flexDirection: 'row',
@@ -537,7 +530,7 @@ const styles = StyleSheet.create({
   },
   nextClassGradient: { 
     padding: 20,
-    height: 235,
+    height: 220,
   },
   nextClassCanvas: {
     position: 'absolute',
@@ -569,29 +562,13 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     paddingRight: 50,
   },
-  arrowButtonContainer: {
-    alignSelf: 'flex-end',
-  },
-  arrowButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(190, 227, 248, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
   nextClassImage: {
     position: 'absolute',
     right: -10,
     top: -10,
     width: 150,
     height: 120,
-    opacity: 0.9,
+    opacity: 0.4,
   },
 
   // Decorative circles (approximation of provided specs)
