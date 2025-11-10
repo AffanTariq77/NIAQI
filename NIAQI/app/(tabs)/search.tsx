@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 0,
+    transform: [{ rotate: '180deg' }],
   },
   container: {
     flex: 1,
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 180,
   },
   courseCard: {
     backgroundColor: '#FFFFFF',

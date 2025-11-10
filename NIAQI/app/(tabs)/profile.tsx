@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 0,
+    transform: [{ rotate: '180deg' }],
   },
   container: {
     flex: 1,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 40,
+    paddingBottom: 180,
   },
   userCard: {
     backgroundColor: '#FFFFFF',

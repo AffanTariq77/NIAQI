@@ -3,13 +3,13 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React from 'react';
 import {
-  Dimensions,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Dimensions,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 60,
+    paddingBottom: 180,
   },
   gridContainer: {
     flexDirection: 'row',

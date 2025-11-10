@@ -32,8 +32,8 @@ const mockMemberships: Membership[] = [
   {
     id: '1',
     title: 'NIAQI Basic Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$99',
+    oldPrice: '$199',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -46,8 +46,8 @@ const mockMemberships: Membership[] = [
   {
     id: '2',
     title: 'NIAQI Premium Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$198',
+    oldPrice: '$299',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -60,8 +60,8 @@ const mockMemberships: Membership[] = [
   {
     id: '3',
     title: 'NIAQI Premium Plus Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$297',
+    oldPrice: '$399',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -113,7 +113,12 @@ const CourseCard: React.FC<CourseCardProps> = ({
           </View>
 
           <Text style={styles.courseTitle}>{membership.title}</Text>
-          <Text style={styles.coursePrice}>{membership.price}</Text>
+          <View style={styles.priceContainer}>
+            <Text style={styles.coursePrice}>{membership.price}</Text>
+            {membership.oldPrice && (
+              <Text style={styles.oldPrice}> / {membership.oldPrice}</Text>
+            )}
+          </View>
         </TouchableOpacity>
 
         {isExpanded && (
@@ -156,7 +161,14 @@ const HomeScreen = () => {
   };
 
   const handleStartNow = (membershipId: string) => {
-    router.push('/cart');
+    const selectedMembership = mockMemberships.find(m => m.id === membershipId);
+    router.push({
+      pathname: '/cart',
+      params: { 
+        membershipId: membershipId,
+        membershipTitle: selectedMembership?.title || '',
+      }
+    });
   };
 
   return (
@@ -212,10 +224,7 @@ const HomeScreen = () => {
           </View>
 
           {/* Next Class Card */}
-          <TouchableOpacity
-            style={styles.nextClassCard}
-            onPress={() => router.push('/course-details')}
-          >
+          <View style={styles.nextClassCard}>
             <LinearGradient
               colors={['#4299E1', '#63B3ED']}
               style={styles.nextClassGradient}
@@ -263,7 +272,7 @@ const HomeScreen = () => {
                 <Ionicons name="arrow-forward-circle" size={32} color="#FFFFFF" />
               </View>
             </LinearGradient>
-          </TouchableOpacity>
+          </View>
 
           {/* My Courses */}
           <View style={styles.section}>
@@ -300,7 +309,7 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, zIndex: 1, backgroundColor: 'transparent' },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 180 },
 
   // Welcome Card
   welcomeCard: {
@@ -467,7 +476,9 @@ const styles = StyleSheet.create({
   ratingValue: { fontSize: 14, fontWeight: '600', color: '#333333', marginRight: 4 },
   ratingCount: { fontSize: 13, color: '#777777', marginLeft: 4 },
   courseTitle: { fontSize: 16, fontWeight: '700', color: '#1C1C1E', marginBottom: 6 },
-  coursePrice: { fontSize: 15, fontWeight: '600', color: '#4B5CF0', marginBottom: 8 },
+  priceContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  coursePrice: { fontSize: 15, fontWeight: '600', color: '#5A7CFF' },
+  oldPrice: { fontSize: 13, fontWeight: '400', color: '#8E8E93', textDecorationLine: 'line-through' },
   expandedContent: {
     marginTop: 10,
     paddingTop: 14,

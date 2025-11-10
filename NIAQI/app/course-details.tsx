@@ -120,7 +120,7 @@ const CourseDetailsScreen = () => {
                     </View>
                     <View style={styles.lessonInfo}>
                       <Text style={styles.lessonTitle}>{lesson.title}</Text>
-                      <Text style={styles.lessonContent}>{lesson.content}</Text>
+                      <Text style={styles.lessonDescription}>{lesson.content}</Text>
                       <Text style={styles.lessonDuration}>{lesson.duration}</Text>
                     </View>
                   </View>
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 180,
   },
   banner: {
     margin: 16,
@@ -306,14 +306,14 @@ const styles = StyleSheet.create({
   },
   lessonCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   lessonHeader: {
     flexDirection: 'row',
@@ -328,13 +328,14 @@ const styles = StyleSheet.create({
   lessonTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
-    marginBottom: 4,
+    color: '#1C1C1E',
+    marginBottom: 6,
   },
-  lessonContent: {
+  lessonDescription: {
     fontSize: 14,
     color: '#666666',
-    marginBottom: 4,
+    lineHeight: 20,
+    marginBottom: 6,
   },
   lessonDuration: {
     fontSize: 12,
@@ -345,14 +346,14 @@ const styles = StyleSheet.create({
   },
   reviewCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -360,16 +361,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reviewAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#E4ECFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   reviewInitial: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#4299E1',
   },
@@ -377,9 +378,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reviewName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
+    color: '#1C1C1E',
+    marginBottom: 4,
   },
   reviewDate: {
     fontSize: 12,
@@ -387,11 +389,11 @@ const styles = StyleSheet.create({
   },
   stars: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 2,
   },
   reviewComment: {
     fontSize: 14,
-    color: '#333333',
+    color: '#666666',
     lineHeight: 20,
   },
   bottomBar: {

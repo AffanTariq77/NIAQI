@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingBottom: 100,
   },
   iconContainer: {
     marginBottom: 40,

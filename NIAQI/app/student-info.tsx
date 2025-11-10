@@ -14,7 +14,9 @@ const StudentInfoScreen = () => {
     <View style={styles.wrapper}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.backgroundContainer}>
-        <BackgroundGradient />
+        <View style={styles.backgroundFlip}>
+          <BackgroundGradient />
+        </View>
       </View>
 
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -144,6 +146,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 0,
   },
+  backgroundFlip: {
+    flex: 1,
+    transform: [{ rotate: '180deg' }],
+  },
   container: {
     flex: 1,
     zIndex: 1,
@@ -183,7 +189,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 180,
   },
 
   /** Profile Card **/
@@ -291,9 +297,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 18,
     right: 18,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(212, 203, 203, 0.37)',
     borderRadius: 50,
-    padding: 6,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 
   /** Detail Sections **/
