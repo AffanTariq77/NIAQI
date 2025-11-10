@@ -5,8 +5,11 @@ import { BlurMask, Canvas, Circle } from '@shopify/react-native-skia';
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import type { ViewToken } from 'react-native';
 import {
+  Dimensions,
+  FlatList,
   Platform,
   ScrollView,
   StatusBar,
@@ -14,9 +17,36 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+interface NextClassCard {
+  id: string;
+  title: string;
+  description: string;
+}
+
+const nextClassCards: NextClassCard[] = [
+  {
+    id: '1',
+    title: 'Next Class - 27-29 August',
+    description: 'Online And On-Site Training & CE For Mold Assessors And Remediators',
+  },
+  {
+    id: '2',
+    title: 'Next Class - 3-5 September',
+    description: 'Advanced Indoor Air Quality Assessment & Remediation Techniques',
+  },
+  {
+    id: '3',
+    title: 'Next Class - 10-12 September',
+    description: 'Comprehensive Mold Inspector Certification Course & Training',
+  },
+];
 
 interface Membership {
   id: string;
@@ -88,49 +118,49 @@ const CourseCard: React.FC<CourseCardProps> = ({
 }) => (
   <View style={{ marginBottom: isExpanded ? 36 : 16, overflow: 'visible' }}>
     <View style={{ overflow: 'visible' }}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F7F8FF', '#FDF5FA']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.courseCard}
-      >
-        <TouchableOpacity onPress={onToggle} activeOpacity={0.8}>
-          <View style={styles.cardHeader}>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingValue}>{membership.rating}</Text>
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Ionicons name="star-half" size={16} color="#FFD700" />
-              <Text style={styles.ratingCount}>({membership.ratingCount})</Text>
-            </View>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={22}
-              color="#777"
-            />
+    <LinearGradient
+      colors={['#FFFFFF', '#F7F8FF', '#FDF5FA']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.courseCard}
+    >
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.8}>
+        <View style={styles.cardHeader}>
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingValue}>{membership.rating}</Text>
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star-half" size={16} color="#FFD700" />
+            <Text style={styles.ratingCount}>({membership.ratingCount})</Text>
           </View>
+          <Ionicons
+            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={22}
+            color="#777"
+          />
+        </View>
 
-          <Text style={styles.courseTitle}>{membership.title}</Text>
+        <Text style={styles.courseTitle}>{membership.title}</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.coursePrice}>{membership.price}</Text>
+        <Text style={styles.coursePrice}>{membership.price}</Text>
             {membership.oldPrice && (
               <Text style={styles.oldPrice}> / {membership.oldPrice}</Text>
             )}
           </View>
-        </TouchableOpacity>
+      </TouchableOpacity>
 
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            {membership.features.map((feature, index) => (
-              <View key={index} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#5A7CFF" />
-                <Text style={styles.featureText}>{feature}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+      {isExpanded && (
+        <View style={styles.expandedContent}>
+          {membership.features.map((feature, index) => (
+            <View key={index} style={styles.featureRow}>
+              <Ionicons name="checkmark-circle" size={18} color="#5A7CFF" />
+              <Text style={styles.featureText}>{feature}</Text>
+            </View>
+          ))}
+        </View>
+      )}
       </LinearGradient>
 
       {isExpanded && (
@@ -155,6 +185,16 @@ const HomeScreen = () => {
   const { user } = useAuth();
   const [searchText, setSearchText] = useState('');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+
+  // Animated values for pagination dashes
+  const dash1Opacity = useSharedValue(1);
+  const dash2Opacity = useSharedValue(0.3);
+  const dash3Opacity = useSharedValue(0.3);
+  const dash1Width = useSharedValue(32);
+  const dash2Width = useSharedValue(24);
+  const dash3Width = useSharedValue(24);
 
   const handleToggleCard = (id: string) => {
     setExpandedCard(expandedCard === id ? null : id);
@@ -171,12 +211,124 @@ const HomeScreen = () => {
     });
   };
 
+  const animatePaginationDashes = (newIndex: number) => {
+    // Reset all dashes
+    dash1Opacity.value = withTiming(0.3, { duration: 200 });
+    dash2Opacity.value = withTiming(0.3, { duration: 200 });
+    dash3Opacity.value = withTiming(0.3, { duration: 200 });
+    
+    dash1Width.value = withTiming(24, { duration: 200 });
+    dash2Width.value = withTiming(24, { duration: 200 });
+    dash3Width.value = withTiming(24, { duration: 200 });
+
+    // Animate active dash
+    setTimeout(() => {
+      if (newIndex === 0) {
+        dash1Opacity.value = withTiming(1, { duration: 200 });
+        dash1Width.value = withTiming(32, { duration: 200 });
+      } else if (newIndex === 1) {
+        dash2Opacity.value = withTiming(1, { duration: 200 });
+        dash2Width.value = withTiming(32, { duration: 200 });
+      } else if (newIndex === 2) {
+        dash3Opacity.value = withTiming(1, { duration: 200 });
+        dash3Width.value = withTiming(32, { duration: 200 });
+      }
+    }, 100);
+  };
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+    if (viewableItems.length > 0) {
+      const newIndex = viewableItems[0].index || 0;
+      setActiveCardIndex(newIndex);
+      animatePaginationDashes(newIndex);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  // Animated styles for dashes
+  const dash1Style = useAnimatedStyle(() => ({
+    width: dash1Width.value,
+    opacity: dash1Opacity.value,
+  }));
+
+  const dash2Style = useAnimatedStyle(() => ({
+    width: dash2Width.value,
+    opacity: dash2Opacity.value,
+  }));
+
+  const dash3Style = useAnimatedStyle(() => ({
+    width: dash3Width.value,
+    opacity: dash3Opacity.value,
+  }));
+
+  const renderNextClassCard = ({ item }: { item: NextClassCard }) => (
+    <View style={styles.nextClassCardWrapper}>
+      <View style={styles.nextClassCard}>
+        <LinearGradient
+          colors={['#4299E1', '#63B3ED']}
+          style={styles.nextClassGradient}
+        >
+          {/* Decorative circles with blur */}
+          {Platform.OS === 'web' ? (
+            <>
+              <View style={{ position: 'absolute', filter: 'blur(50px)', WebkitFilter: 'blur(50px)' } as any}>
+                <View style={styles.decorCircleBlue} />
+              </View>
+              <View style={{ position: 'absolute', filter: 'blur(75px)', WebkitFilter: 'blur(75px)' } as any}>
+                <View style={styles.decorCirclePurple} />
+              </View>
+            </>
+          ) : (
+            <Canvas style={styles.nextClassCanvas} pointerEvents="none">
+              {/* Blue blurred circle */}
+              <Circle cx={12.5} cy={9} r={60} color="#9BC1FB">
+                <BlurMask blur={35} style="normal" />
+              </Circle>
+              {/* Purple blurred circle */}
+              <Circle cx={27.5} cy={3} r={62} color="#8774FE">
+                <BlurMask blur={50} style="normal" />
+              </Circle>
+            </Canvas>
+          )}
+
+          {/* Background image on the right */}
+          <ExpoImage
+            source={require('../../assets/mould2.png')}
+            style={styles.nextClassImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+            priority="high"
+            transition={150}
+          />
+          <View style={styles.nextClassContent}>
+            <View style={styles.nextClassTextContainer}>
+              <Text style={styles.nextClassLabel}>{item.title}</Text>
+              <Text style={styles.nextClassTitle}>
+                {item.description}
+              </Text>
+            </View>
+            
+            {/* Arrow Button */}
+            <View style={styles.arrowButtonContainer}>
+              <View style={styles.arrowButton}>
+                <Ionicons name="chevron-forward" size={24} color="#1C1C1E" />
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.wrapper}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.backgroundContainer}>
         <View style={styles.backgroundFlip}>
-          <BackgroundGradient />
+        <BackgroundGradient />
         </View>
       </View>
 
@@ -223,56 +375,29 @@ const HomeScreen = () => {
             </LinearGradient>
           </View>
 
-          {/* Next Class Card */}
-          <View style={styles.nextClassCard}>
-            <LinearGradient
-              colors={['#4299E1', '#63B3ED']}
-              style={styles.nextClassGradient}
-            >
-              {/* Decorative circles with blur */}
-              {Platform.OS === 'web' ? (
-                <>
-                  <View style={{ position: 'absolute', filter: 'blur(50px)', WebkitFilter: 'blur(50px)' } as any}>
-                    <View style={styles.decorCircleBlue} />
-                  </View>
-                  <View style={{ position: 'absolute', filter: 'blur(75px)', WebkitFilter: 'blur(75px)' } as any}>
-                    <View style={styles.decorCirclePurple} />
-                  </View>
-                </>
-              ) : (
-                <Canvas style={styles.nextClassCanvas} pointerEvents="none">
-                  {/* Blue blurred circle */}
-                  <Circle cx={12.5} cy={9} r={60} color="#9BC1FB">
-                    <BlurMask blur={35} style="normal" />
-                  </Circle>
-                  {/* Purple blurred circle */}
-                  <Circle cx={27.5} cy={3} r={62} color="#8774FE">
-                    <BlurMask blur={50} style="normal" />
-                  </Circle>
-                </Canvas>
-              )}
-
-              {/* Background image on the right */}
-              <ExpoImage
-                source={require('../../assets/mould2.png')}
-                style={styles.nextClassImage}
-                contentFit="contain"
-                cachePolicy="memory-disk"
-                priority="high"
-                transition={150}
-              />
-              <View style={styles.nextClassContent}>
-                <View style={styles.nextClassTextContainer}>
-                  <Text style={styles.nextClassLabel}>Next Class</Text>
-                  <Text style={styles.nextClassTitle}>
-                    Indoor Air Quality Fundamentals
-                  </Text>
-                  <Text style={styles.nextClassTime}>Today at 2:00 PM</Text>
+          {/* Next Class Cards Carousel */}
+          <View style={styles.carouselContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={nextClassCards}
+              renderItem={renderNextClassCard}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={SCREEN_WIDTH}
+              decelerationRate="fast"
+              onViewableItemsChanged={onViewableItemsChanged}
+              viewabilityConfig={viewabilityConfig}
+            />
+            
+            {/* Pagination Dashes */}
+            <View style={styles.paginationContainer}>
+              <Animated.View style={[styles.paginationDash, dash1Style]} />
+              <Animated.View style={[styles.paginationDash, dash2Style]} />
+              <Animated.View style={[styles.paginationDash, dash3Style]} />
                 </View>
-                <Ionicons name="arrow-forward-circle" size={32} color="#FFFFFF" />
               </View>
-            </LinearGradient>
-          </View>
 
           {/* My Courses */}
           <View style={styles.section}>
@@ -379,16 +504,41 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 
-  // Next Class
-  nextClassCard: {
-    marginHorizontal: 16,
+  // Next Class Carousel
+  carouselContainer: {
     marginTop: 24,
     marginBottom: 24,
+  },
+  nextClassCardWrapper: {
+    width: SCREEN_WIDTH,
+    paddingHorizontal: 16,
+  },
+  nextClassCard: {
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    height: 230,
   },
-  nextClassGradient: { padding: 20 },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  paginationDash: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#1C1C1E',
+  },
+  nextClassGradient: { 
+    padding: 20,
+    height: 235,
+  },
   nextClassCanvas: {
     position: 'absolute',
     left: 0,
@@ -397,19 +547,44 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   nextClassContent: {
-    flexDirection: 'row',
+    flexDirection: 'column',
+    flex: 1,
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  nextClassTextContainer: { flex: 1 },
+  nextClassTextContainer: { 
+    flex: 1,
+    marginTop: 40,
+  },
   nextClassLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 10,
+    letterSpacing: 0.2,
   },
-  nextClassTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 4 },
-  nextClassTime: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+  nextClassTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#1C1C1E', 
+    lineHeight: 26,
+    paddingRight: 50,
+  },
+  arrowButtonContainer: {
+    alignSelf: 'flex-end',
+  },
+  arrowButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(190, 227, 248, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   nextClassImage: {
     position: 'absolute',
     right: -10,
