@@ -1,15 +1,14 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,12 +20,36 @@ type CartItem = {
   oldPrice?: number;
 };
 
+const getItemPrice = (membershipId: string): { currentPrice: number; oldPrice: number } => {
+  switch (membershipId) {
+    case '1':
+      return { currentPrice: 99, oldPrice: 199 };
+    case '2':
+      return { currentPrice: 198, oldPrice: 299 };
+    case '3':
+      return { currentPrice: 297, oldPrice: 399 };
+    default:
+      return { currentPrice: 99, oldPrice: 199 };
+  }
+};
+
 const CartScreen = () => {
+  const params = useLocalSearchParams();
   const swipeRefs = useRef<Record<string, Swipeable | null>>({});
-  const [items, setItems] = useState<CartItem[]>([
-    { id: '1', title: 'NIAQI Basic Membership', currentPrice: 99, oldPrice: 199 },
-    { id: '2', title: 'NIAQI Premium Membership', currentPrice: 198, oldPrice: 299 },
-  ]);
+  const [items, setItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    // Initialize cart with selected membership
+    if (params.membershipId && params.membershipTitle) {
+      const prices = getItemPrice(params.membershipId as string);
+      setItems([{
+        id: params.membershipId as string,
+        title: params.membershipTitle as string,
+        currentPrice: prices.currentPrice,
+        oldPrice: prices.oldPrice,
+      }]);
+    }
+  }, [params.membershipId, params.membershipTitle]);
 
   const itemCost = items.reduce((sum, it) => sum + it.currentPrice, 0);
   const discount = 0;
@@ -41,27 +64,13 @@ const CartScreen = () => {
   };
 
   // Gmail-style swipe-to-delete background
-  const renderRightActions = (id: string, dragX: Animated.AnimatedInterpolation<number>) => {
-    const backgroundColor = dragX.interpolate({
-      inputRange: [-120, 0],
-      outputRange: ['#000000', 'transparent'],
-      extrapolate: 'clamp',
-    });
-
-    const iconScale = dragX.interpolate({
-      inputRange: [-120, -60, 0],
-      outputRange: [1.2, 1, 0.5],
-      extrapolate: 'clamp',
-    });
-
+  const renderRightActions = (id: string) => {
     return (
-      <Animated.View style={[styles.swipeBackground, { backgroundColor }]}>
-        <Animated.View style={[styles.deleteButtonAnimated, { transform: [{ scale: iconScale }] }]}> 
-          <TouchableOpacity onPress={() => handleDelete(id)} activeOpacity={0.8}>
-            <Ionicons name="trash-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </Animated.View>
-      </Animated.View>
+      <View style={styles.swipeBackground}>
+        <TouchableOpacity onPress={() => handleDelete(id)} activeOpacity={0.8} style={styles.deleteButtonAnimated}>
+          <Ionicons name="trash-outline" size={26} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -94,14 +103,15 @@ const CartScreen = () => {
               ref={(ref) => {
                 swipeRefs.current[item.id] = ref;
               }}
-              renderRightActions={(progress, dragX) => renderRightActions(item.id, dragX)}
+              renderRightActions={() => renderRightActions(item.id)}
               overshootRight={false}
-              rightThreshold={72}
-              friction={2.5}
+              friction={1.5}
+              overshootFriction={8}
+              enableTrackpadTwoFingerGesture={false}
+              rightThreshold={80}
               onSwipeableRightOpen={() => {
-                // Close first to avoid background flicker, then delete
-                swipeRefs.current[item.id]?.close();
-                setTimeout(() => handleDelete(item.id), 120);
+                // Delete immediately on full swipe
+                handleDelete(item.id);
               }}
             >
               <View style={styles.cartItem}>
@@ -162,7 +172,7 @@ const styles = StyleSheet.create({
   backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', color: '#111' },
 
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 180 },
   itemsCountText: { fontSize: 16, color: '#111', marginBottom: 16, fontWeight: '600' },
 
   cartItem: {
@@ -211,11 +221,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 16,
     paddingRight: 24,
+    backgroundColor: '#000000',
   },
   deleteButtonAnimated: {
-    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 12,
   },
 
   bottomArea: { paddingBottom: 24 },

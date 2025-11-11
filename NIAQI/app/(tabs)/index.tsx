@@ -2,11 +2,14 @@ import BackgroundGradient from '@/components/BackgroundGradient';
 import { useAuth } from '@/lib/auth-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { BlurMask, Canvas, Circle } from '@shopify/react-native-skia';
+import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import type { ViewToken } from 'react-native';
 import {
-  Image,
+  Dimensions,
+  FlatList,
   Platform,
   ScrollView,
   StatusBar,
@@ -14,9 +17,36 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+interface NextClassCard {
+  id: string;
+  title: string;
+  description: string;
+}
+
+const nextClassCards: NextClassCard[] = [
+  {
+    id: '1',
+    title: 'Next Class - 27-29 August',
+    description: 'Online And On-Site Training & CE For Mold Assessors And Remediators',
+  },
+  {
+    id: '2',
+    title: 'Next Class - 3-5 September',
+    description: 'Advanced Indoor Air Quality Assessment & Remediation Techniques',
+  },
+  {
+    id: '3',
+    title: 'Next Class - 10-12 September',
+    description: 'Comprehensive Mold Inspector Certification Course & Training',
+  },
+];
 
 interface Membership {
   id: string;
@@ -32,8 +62,8 @@ const mockMemberships: Membership[] = [
   {
     id: '1',
     title: 'NIAQI Basic Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$99',
+    oldPrice: '$199',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -46,8 +76,8 @@ const mockMemberships: Membership[] = [
   {
     id: '2',
     title: 'NIAQI Premium Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$198',
+    oldPrice: '$299',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -60,8 +90,8 @@ const mockMemberships: Membership[] = [
   {
     id: '3',
     title: 'NIAQI Premium Plus Membership',
-    price: '$$$ $$$',
-    oldPrice: '',
+    price: '$297',
+    oldPrice: '$399',
     rating: '4.8',
     ratingCount: 234,
     features: [
@@ -86,7 +116,8 @@ const CourseCard: React.FC<CourseCardProps> = ({
   onToggle,
   onStartNow,
 }) => (
-  <View style={{ marginBottom: 40 }}>
+  <View style={{ marginBottom: isExpanded ? 36 : 16, overflow: 'visible' }}>
+    <View style={{ overflow: 'visible' }}>
     <LinearGradient
       colors={['#FFFFFF', '#F7F8FF', '#FDF5FA']}
       start={{ x: 0, y: 0 }}
@@ -112,7 +143,12 @@ const CourseCard: React.FC<CourseCardProps> = ({
         </View>
 
         <Text style={styles.courseTitle}>{membership.title}</Text>
+          <View style={styles.priceContainer}>
         <Text style={styles.coursePrice}>{membership.price}</Text>
+            {membership.oldPrice && (
+              <Text style={styles.oldPrice}> / {membership.oldPrice}</Text>
+            )}
+          </View>
       </TouchableOpacity>
 
       {isExpanded && (
@@ -125,6 +161,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           ))}
         </View>
       )}
+      </LinearGradient>
 
       {isExpanded && (
         <View style={styles.startNowWrapper}>
@@ -140,7 +177,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           </TouchableOpacity>
         </View>
       )}
-    </LinearGradient>
+    </View>
   </View>
 );
 
@@ -148,21 +185,143 @@ const HomeScreen = () => {
   const { user } = useAuth();
   const [searchText, setSearchText] = useState('');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+
+  // Animated values for pagination dashes
+  const dash1Opacity = useSharedValue(1);
+  const dash2Opacity = useSharedValue(0.3);
+  const dash3Opacity = useSharedValue(0.3);
+  const dash1Width = useSharedValue(32);
+  const dash2Width = useSharedValue(24);
+  const dash3Width = useSharedValue(24);
 
   const handleToggleCard = (id: string) => {
     setExpandedCard(expandedCard === id ? null : id);
   };
 
   const handleStartNow = (membershipId: string) => {
-    router.push('/cart');
+    const selectedMembership = mockMemberships.find(m => m.id === membershipId);
+    router.push({
+      pathname: '/cart',
+      params: { 
+        membershipId: membershipId,
+        membershipTitle: selectedMembership?.title || '',
+      }
+    });
   };
+
+  const animatePaginationDashes = (newIndex: number) => {
+    // Reset all dashes
+    dash1Opacity.value = withTiming(0.3, { duration: 200 });
+    dash2Opacity.value = withTiming(0.3, { duration: 200 });
+    dash3Opacity.value = withTiming(0.3, { duration: 200 });
+    
+    dash1Width.value = withTiming(24, { duration: 200 });
+    dash2Width.value = withTiming(24, { duration: 200 });
+    dash3Width.value = withTiming(24, { duration: 200 });
+
+    // Animate active dash
+    setTimeout(() => {
+      if (newIndex === 0) {
+        dash1Opacity.value = withTiming(1, { duration: 200 });
+        dash1Width.value = withTiming(32, { duration: 200 });
+      } else if (newIndex === 1) {
+        dash2Opacity.value = withTiming(1, { duration: 200 });
+        dash2Width.value = withTiming(32, { duration: 200 });
+      } else if (newIndex === 2) {
+        dash3Opacity.value = withTiming(1, { duration: 200 });
+        dash3Width.value = withTiming(32, { duration: 200 });
+      }
+    }, 100);
+  };
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+    if (viewableItems.length > 0) {
+      const newIndex = viewableItems[0].index || 0;
+      setActiveCardIndex(newIndex);
+      animatePaginationDashes(newIndex);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  // Animated styles for dashes
+  const dash1Style = useAnimatedStyle(() => ({
+    width: dash1Width.value,
+    opacity: dash1Opacity.value,
+  }));
+
+  const dash2Style = useAnimatedStyle(() => ({
+    width: dash2Width.value,
+    opacity: dash2Opacity.value,
+  }));
+
+  const dash3Style = useAnimatedStyle(() => ({
+    width: dash3Width.value,
+    opacity: dash3Opacity.value,
+  }));
+
+  const renderNextClassCard = ({ item }: { item: NextClassCard }) => (
+    <View style={styles.nextClassCardWrapper}>
+      <View style={styles.nextClassCard}>
+        <LinearGradient
+          colors={['#4299E1', '#63B3ED']}
+          style={styles.nextClassGradient}
+        >
+          {/* Decorative circles with blur */}
+          {Platform.OS === 'web' ? (
+            <>
+              <View style={{ position: 'absolute', filter: 'blur(50px)', WebkitFilter: 'blur(50px)' } as any}>
+                <View style={styles.decorCircleBlue} />
+              </View>
+              <View style={{ position: 'absolute', filter: 'blur(75px)', WebkitFilter: 'blur(75px)' } as any}>
+                <View style={styles.decorCirclePurple} />
+              </View>
+            </>
+          ) : (
+            <Canvas style={styles.nextClassCanvas} pointerEvents="none">
+              {/* Blue blurred circle */}
+              <Circle cx={12.5} cy={9} r={60} color="#9BC1FB">
+                <BlurMask blur={35} style="normal" />
+              </Circle>
+              {/* Purple blurred circle */}
+              <Circle cx={27.5} cy={3} r={62} color="#8774FE">
+                <BlurMask blur={50} style="normal" />
+              </Circle>
+            </Canvas>
+          )}
+
+          {/* Background image on the right */}
+          <ExpoImage
+            source={require('../../assets/mould2.png')}
+            style={styles.nextClassImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+            priority="high"
+            transition={150}
+          />
+          <View style={styles.nextClassContent}>
+            <View style={styles.nextClassTextContainer}>
+              <Text style={styles.nextClassLabel}>{item.title}</Text>
+              <Text style={styles.nextClassTitle}>
+                {item.description}
+              </Text>
+            </View>            
+          </View>
+        </LinearGradient>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.wrapper}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <View style={styles.backgroundContainer}>
         <View style={styles.backgroundFlip}>
-          <BackgroundGradient />
+        <BackgroundGradient />
         </View>
       </View>
 
@@ -209,57 +368,29 @@ const HomeScreen = () => {
             </LinearGradient>
           </View>
 
-          {/* Next Class Card */}
-          <TouchableOpacity
-            style={styles.nextClassCard}
-            onPress={() => router.push('/course-details')}
-          >
-            <LinearGradient
-              colors={['#4299E1', '#63B3ED']}
-              style={styles.nextClassGradient}
-            >
-              {/* Decorative circles with blur */}
-              {Platform.OS === 'web' ? (
-                <>
-                  <View style={{ position: 'absolute', filter: 'blur(50px)', WebkitFilter: 'blur(50px)' } as any}>
-                    <View style={styles.decorCircleBlue} />
-                  </View>
-                  <View style={{ position: 'absolute', filter: 'blur(75px)', WebkitFilter: 'blur(75px)' } as any}>
-                    <View style={styles.decorCirclePurple} />
-                  </View>
-                </>
-              ) : (
-                <Canvas style={styles.nextClassCanvas} pointerEvents="none">
-                  {/* Blue blurred circle */}
-                  <Circle cx={12.5} cy={9} r={60} color="#9BC1FB">
-                    <BlurMask blur={35} style="normal" />
-                  </Circle>
-                  {/* Purple blurred circle */}
-                  <Circle cx={27.5} cy={3} r={62} color="#8774FE">
-                    <BlurMask blur={50} style="normal" />
-                  </Circle>
-                </Canvas>
-              )}
-
-              {/* Background image on the right */}
-              <Image
-                source={require('../../assets/mould2.png')}
-                style={styles.nextClassImage}
-                resizeMode="contain"
-                accessible={false}
-              />
-              <View style={styles.nextClassContent}>
-                <View style={styles.nextClassTextContainer}>
-                  <Text style={styles.nextClassLabel}>Next Class</Text>
-                  <Text style={styles.nextClassTitle}>
-                    Indoor Air Quality Fundamentals
-                  </Text>
-                  <Text style={styles.nextClassTime}>Today at 2:00 PM</Text>
+          {/* Next Class Cards Carousel */}
+          <View style={styles.carouselContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={nextClassCards}
+              renderItem={renderNextClassCard}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={SCREEN_WIDTH}
+              decelerationRate="fast"
+              onViewableItemsChanged={onViewableItemsChanged}
+              viewabilityConfig={viewabilityConfig}
+            />
+            
+            {/* Pagination Dashes */}
+            <View style={styles.paginationContainer}>
+              <Animated.View style={[styles.paginationDash, dash1Style]} />
+              <Animated.View style={[styles.paginationDash, dash2Style]} />
+              <Animated.View style={[styles.paginationDash, dash3Style]} />
                 </View>
-                <Ionicons name="arrow-forward-circle" size={32} color="#FFFFFF" />
               </View>
-            </LinearGradient>
-          </TouchableOpacity>
 
           {/* My Courses */}
           <View style={styles.section}>
@@ -296,7 +427,7 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, zIndex: 1, backgroundColor: 'transparent' },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 180 },
 
   // Welcome Card
   welcomeCard: {
@@ -366,16 +497,42 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 
-  // Next Class
-  nextClassCard: {
-    marginHorizontal: 16,
+  // Next Class Carousel
+  carouselContainer: {
     marginTop: 24,
     marginBottom: 24,
+  },
+  nextClassCardWrapper: {
+    width: SCREEN_WIDTH,
+    paddingHorizontal: 16,
+  },
+  nextClassCard: {
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    height: 215,
   },
-  nextClassGradient: { padding: 20 },
+  
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  paginationDash: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: '#1C1C1E',
+  },
+  nextClassGradient: { 
+    padding: 20,
+    height: 220,
+  },
   nextClassCanvas: {
     position: 'absolute',
     left: 0,
@@ -384,26 +541,35 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   nextClassContent: {
-    flexDirection: 'row',
+    flexDirection: 'column',
+    flex: 1,
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  nextClassTextContainer: { flex: 1 },
+  nextClassTextContainer: { 
+    flex: 1,
+    marginTop: 40,
+  },
   nextClassLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 10,
+    letterSpacing: 0.2,
   },
-  nextClassTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 4 },
-  nextClassTime: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+  nextClassTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#1C1C1E', 
+    lineHeight: 26,
+    paddingRight: 50,
+  },
   nextClassImage: {
     position: 'absolute',
     right: -10,
     top: -10,
     width: 150,
     height: 120,
-    opacity: 0.9,
+    opacity: 0.4,
   },
 
   // Decorative circles (approximation of provided specs)
@@ -442,6 +608,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 16,
+    paddingBottom: 28,
     shadowColor: '#B3B3B3',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
@@ -450,6 +617,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(206, 202, 202, 0.5)',
     backgroundColor: '#FFFFFF',
+    overflow: 'visible',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -461,7 +629,9 @@ const styles = StyleSheet.create({
   ratingValue: { fontSize: 14, fontWeight: '600', color: '#333333', marginRight: 4 },
   ratingCount: { fontSize: 13, color: '#777777', marginLeft: 4 },
   courseTitle: { fontSize: 16, fontWeight: '700', color: '#1C1C1E', marginBottom: 6 },
-  coursePrice: { fontSize: 15, fontWeight: '600', color: '#4B5CF0', marginBottom: 8 },
+  priceContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  coursePrice: { fontSize: 15, fontWeight: '600', color: '#5A7CFF' },
+  oldPrice: { fontSize: 13, fontWeight: '400', color: '#8E8E93', textDecorationLine: 'line-through' },
   expandedContent: {
     marginTop: 10,
     paddingTop: 14,
@@ -472,16 +642,22 @@ const styles = StyleSheet.create({
   featureText: { fontSize: 14, color: '#333333', marginLeft: 10 },
   startNowWrapper: {
     position: 'absolute',
-    bottom: -20,
-    alignSelf: 'center',
+    bottom: -22,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   startNowButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 48,
+    paddingVertical: 14,
+    paddingHorizontal: 52,
     borderRadius: 150,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
+    shadowColor: '#5A7CFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   startNowText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });
