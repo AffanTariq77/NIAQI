@@ -516,6 +516,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     height: 215,
   },
+  
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
