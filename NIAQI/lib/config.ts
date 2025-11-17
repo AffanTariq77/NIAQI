@@ -4,20 +4,20 @@
 export const API_CONFIG = {
   // For development, replace with your machine's IP address
   // Find your IP with: ifconfig (macOS/Linux) or ipconfig (Windows)
-  BASE_URL: __DEV__ 
-    ? 'http://172.16.0.29:5000/api' // Your actual IP address
-    : 'https://your-production-api.com/api',
-  
+  BASE_URL: __DEV__
+    ? "http://192.168.88.94:5000/api" // Your Mac's actual WiFi IP (en0)
+    : "https://your-production-api.com/api",
+
   // Timeout for API requests (in milliseconds)
   TIMEOUT: 10000,
-  
+
   // Retry configuration
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
 };
 
 // Instructions for finding your IP address:
-// 
+//
 // macOS/Linux:
 //   Run: ifconfig | grep "inet " | grep -v 127.0.0.1
 //   Look for something like: inet 192.168.1.100
