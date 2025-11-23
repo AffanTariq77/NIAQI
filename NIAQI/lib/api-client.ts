@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  membershipType: "BASIC" | "PREMIUM" | "PREMIUM_PLUS";
   isEmailConfirmed: boolean;
   createdAt: string;
 }
@@ -281,7 +282,23 @@ class ApiClient {
       await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_API_RESPONSES.signIn.user;
     }
-    const response = await this.client.get<User>("/users/me");
+    const response = await this.client.get<User>("/auth/me");
+    return response.data;
+  }
+
+  async updateMembership(
+    membershipType: "BASIC" | "PREMIUM" | "PREMIUM_PLUS"
+  ): Promise<User> {
+    if (USE_MOCK_API) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return {
+        ...MOCK_API_RESPONSES.signIn.user,
+        membershipType,
+      };
+    }
+    const response = await this.client.patch<User>("/auth/membership", {
+      membershipType,
+    });
     return response.data;
   }
 }
