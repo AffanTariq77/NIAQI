@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { AxiosInstance } from 'axios';
-import { API_CONFIG } from './config';
-import { MOCK_API_RESPONSES, USE_MOCK_API } from './mock-api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios, { AxiosInstance } from "axios";
+import { API_CONFIG } from "./config";
+import { MOCK_API_RESPONSES, USE_MOCK_API } from "./mock-api";
 
 // Types
 export interface User {
@@ -58,9 +58,9 @@ const API_BASE_URL = API_CONFIG.BASE_URL;
 
 // Storage keys
 const STORAGE_KEYS = {
-  ACCESS_TOKEN: 'access_token',
-  REFRESH_TOKEN: 'refresh_token',
-  USER: 'user',
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+  USER: "user",
 } as const;
 
 class ApiClient {
@@ -76,7 +76,7 @@ class ApiClient {
       baseURL: API_BASE_URL,
       timeout: API_CONFIG.TIMEOUT,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -107,20 +107,24 @@ class ApiClient {
             // If already refreshing, queue the request
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
-            }).then(() => {
-              return this.client(originalRequest);
-            }).catch((err) => {
-              return Promise.reject(err);
-            });
+            })
+              .then(() => {
+                return this.client(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
           }
 
           originalRequest._retry = true;
           this.isRefreshing = true;
 
           try {
-            const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+            const refreshToken = await AsyncStorage.getItem(
+              STORAGE_KEYS.REFRESH_TOKEN
+            );
             if (!refreshToken) {
-              throw new Error('No refresh token available');
+              throw new Error("No refresh token available");
             }
 
             const response = await this.refreshToken({ refreshToken });
@@ -185,67 +189,88 @@ class ApiClient {
   async signUp(data: SignUpRequest): Promise<AuthResponse> {
     if (USE_MOCK_API) {
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return MOCK_API_RESPONSES.signUp;
     }
-    const response = await this.client.post<AuthResponse>('/auth/signup', data);
-    return response.data;
+    console.log("🔵 API Client - SignUp Request:");
+    console.log("  URL:", `${API_BASE_URL}/auth/signup`);
+    console.log("  Data:", JSON.stringify(data, null, 2));
+    try {
+      const response = await this.client.post<AuthResponse>(
+        "/auth/signup",
+        data
+      );
+      console.log("✅ API Client - SignUp Success:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ API Client - SignUp Error:");
+      console.error("  Message:", error.message);
+      console.error("  Response:", error.response?.data);
+      console.error("  Status:", error.response?.status);
+      throw error;
+    }
   }
 
   async signIn(data: SignInRequest): Promise<AuthResponse> {
     if (USE_MOCK_API) {
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return MOCK_API_RESPONSES.signIn;
     }
-    const response = await this.client.post<AuthResponse>('/auth/signin', data);
+    const response = await this.client.post<AuthResponse>("/auth/signin", data);
     return response.data;
   }
 
   async confirmEmail(userId: string, token: string): Promise<void> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return;
     }
-    await this.client.get('/auth/confirm-email', {
+    await this.client.get("/auth/confirm-email", {
       params: { userId, token },
     });
   }
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<string> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return MOCK_API_RESPONSES.forgotPassword;
     }
-    const response = await this.client.post<{ message: string }>('/auth/forgot-password', data);
+    const response = await this.client.post<{ message: string }>(
+      "/auth/forgot-password",
+      data
+    );
     return response.data.message;
   }
 
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return;
     }
-    await this.client.post('/auth/reset-password', data);
+    await this.client.post("/auth/reset-password", data);
   }
 
   async refreshToken(data: RefreshTokenRequest): Promise<AuthResponse> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_API_RESPONSES.signIn;
     }
-    const response = await this.client.post<AuthResponse>('/auth/refresh', data);
+    const response = await this.client.post<AuthResponse>(
+      "/auth/refresh",
+      data
+    );
     return response.data;
   }
 
   async logout(refreshToken: string): Promise<void> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await this.clearTokens();
       return;
     }
     try {
-      await this.client.post('/auth/logout', { refreshToken });
+      await this.client.post("/auth/logout", { refreshToken });
     } finally {
       await this.clearTokens();
     }
@@ -253,10 +278,10 @@ class ApiClient {
 
   async getCurrentUser(): Promise<User> {
     if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       return MOCK_API_RESPONSES.signIn.user;
     }
-    const response = await this.client.get<User>('/users/me');
+    const response = await this.client.get<User>("/users/me");
     return response.data;
   }
 }

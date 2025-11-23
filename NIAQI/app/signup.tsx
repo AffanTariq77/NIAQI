@@ -114,12 +114,19 @@ const SignUpScreen = () => {
 
     setIsLoading(true);
     try {
+      console.log("📝 SignUp Screen - Starting signup process");
+      console.log("  Name:", name);
+      console.log("  Email:", email);
+      console.log("  Password length:", password.length);
+
       await apiClient.signUp({
         name,
         email,
         password,
         confirmPassword,
       });
+
+      console.log("✅ SignUp Screen - Signup successful");
 
       // Show success and navigate to account created screen
       Toast.show({
@@ -133,6 +140,12 @@ const SignUpScreen = () => {
         router.replace("/account-created");
       }, 500);
     } catch (error: any) {
+      console.error("❌ SignUp Screen - Error occurred:");
+      console.error("  Error type:", error.constructor.name);
+      console.error("  Error message:", error.message);
+      console.error("  Error response:", error.response);
+      console.error("  Full error:", error);
+
       // Enhanced error handling to show backend validation errors
       const errorMessage = error?.response?.data?.message;
       let displayMessage = "Failed to create account. Please try again.";
