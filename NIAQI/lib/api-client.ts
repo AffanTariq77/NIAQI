@@ -54,6 +54,148 @@ export interface ConfirmEmailRequest {
   token: string;
 }
 
+export interface MembershipPlan {
+  id: string;
+  name: string;
+  type: "BASIC" | "PREMIUM" | "PREMIUM_PLUS";
+  description: string;
+  features: string[];
+  currentPrice: number;
+  oldPrice: number | null;
+  durationMonths: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CartItem {
+  id: string;
+  cartId: string;
+  membershipPlanId: string;
+  quantity: number;
+  price: number;
+  membershipPlan: MembershipPlan;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Cart {
+  id: string;
+  userId: string;
+  items: CartItem[];
+  subtotal: number;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  membershipPlanId: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+  membershipPlan: {
+    id: string;
+    name: string;
+    type: string;
+    description: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  userId: string;
+  status: "PENDING" | "COMPLETED" | "CANCELLED" | "REFUNDED";
+  paymentStatus: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+  subtotal: number;
+  discount: number;
+  total: number;
+  paymentMethod: string | null;
+  transactionId: string | null;
+  items: OrderItem[];
+  completedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrderRequest {
+  items: {
+    membershipPlanId: string;
+    quantity: number;
+    price: number;
+  }[];
+  paymentMethod?: string;
+  billingName?: string;
+  billingEmail?: string;
+  billingAddress?: string;
+  billingCity?: string;
+  billingState?: string;
+  billingCountry?: string;
+  billingPostalCode?: string;
+  notes?: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  userId: string;
+  phoneNumber: string | null;
+  dateOfBirth: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+  bio: string | null;
+  profileImage: string | null;
+  institution: string | null;
+  fieldOfStudy: string | null;
+  graduationYear: number | null;
+  interests: string[];
+  notifications: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStudentProfileRequest {
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  bio?: string;
+  profileImage?: string;
+  institution?: string;
+  fieldOfStudy?: string;
+  graduationYear?: number;
+  interests?: string[];
+  notifications?: boolean;
+}
+
+export interface UpdateStudentProfileRequest {
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  bio?: string;
+  profileImage?: string;
+  institution?: string;
+  fieldOfStudy?: string;
+  graduationYear?: number;
+  interests?: string[];
+  notifications?: boolean;
+}
+
 // API Configuration
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
@@ -300,6 +442,111 @@ class ApiClient {
       membershipType,
     });
     return response.data;
+  }
+
+  // Membership API methods
+  async getMembershipPlans(): Promise<MembershipPlan[]> {
+    const response = await this.client.get<MembershipPlan[]>(
+      "/membership/plans"
+    );
+    return response.data;
+  }
+
+  async getMembershipPlanById(planId: string): Promise<MembershipPlan> {
+    const response = await this.client.get<MembershipPlan>(
+      `/membership/plans/${planId}`
+    );
+    return response.data;
+  }
+
+  async getMembershipPlanByType(type: string): Promise<MembershipPlan> {
+    const response = await this.client.get<MembershipPlan>(
+      `/membership/plans/type/${type}`
+    );
+    return response.data;
+  }
+
+  // Cart API methods
+  async getCart(): Promise<Cart> {
+    const response = await this.client.get<Cart>("/cart");
+    return response.data;
+  }
+
+  async addToCart(
+    membershipPlanId: string,
+    quantity: number = 1
+  ): Promise<Cart> {
+    const response = await this.client.post<Cart>("/cart/add", {
+      membershipPlanId,
+      quantity,
+    });
+    return response.data;
+  }
+
+  async updateCartItem(itemId: string, quantity: number): Promise<Cart> {
+    const response = await this.client.patch<Cart>(`/cart/items/${itemId}`, {
+      quantity,
+    });
+    return response.data;
+  }
+
+  async removeFromCart(itemId: string): Promise<void> {
+    await this.client.delete(`/cart/items/${itemId}`);
+  }
+
+  async clearCart(): Promise<void> {
+    await this.client.delete("/cart/clear");
+  }
+
+  // Order API methods
+  async createOrder(orderData: CreateOrderRequest): Promise<Order> {
+    const response = await this.client.post<Order>("/orders", orderData);
+    return response.data;
+  }
+
+  async checkoutFromCart(): Promise<Order> {
+    const response = await this.client.post<Order>("/orders/checkout");
+    return response.data;
+  }
+
+  async getOrders(): Promise<Order[]> {
+    const response = await this.client.get<Order[]>("/orders");
+    return response.data;
+  }
+
+  async getOrderById(orderId: string): Promise<Order> {
+    const response = await this.client.get<Order>(`/orders/${orderId}`);
+    return response.data;
+  }
+
+  // Student Profile API methods
+  async getStudentProfile(): Promise<StudentProfile> {
+    const response = await this.client.get<StudentProfile>("/student-profile");
+    return response.data;
+  }
+
+  async createStudentProfile(
+    profileData: CreateStudentProfileRequest
+  ): Promise<StudentProfile> {
+    const response = await this.client.post<StudentProfile>(
+      "/student-profile",
+      profileData
+    );
+    return response.data;
+  }
+
+  async updateStudentProfile(
+    profileData: UpdateStudentProfileRequest
+  ): Promise<StudentProfile> {
+    const response = await this.client.patch<StudentProfile>(
+      "/student-profile",
+      profileData
+    );
+    return response.data;
+  }
+
+  async deleteStudentProfile(): Promise<void> {
+    await this.client.delete("/student-profile");
   }
 }
 

@@ -14,7 +14,7 @@ import {
 import { Swipeable } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/lib/auth-context";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, MembershipPlan } from "@/lib/api-client";
 import Toast from "react-native-toast-message";
 
 type CartItem = {
@@ -22,21 +22,8 @@ type CartItem = {
   title: string;
   currentPrice: number;
   oldPrice?: number;
-};
-
-const getItemPrice = (
-  membershipId: string
-): { currentPrice: number; oldPrice: number } => {
-  switch (membershipId) {
-    case "1":
-      return { currentPrice: 99, oldPrice: 199 };
-    case "2":
-      return { currentPrice: 198, oldPrice: 299 };
-    case "3":
-      return { currentPrice: 297, oldPrice: 399 };
-    default:
-      return { currentPrice: 99, oldPrice: 199 };
-  }
+  membershipPlanId: string;
+  quantity: number;
 };
 
 const CartScreen = () => {
@@ -44,24 +31,96 @@ const CartScreen = () => {
   const swipeRefs = useRef<Record<string, Swipeable | null>>({});
   const [items, setItems] = useState<CartItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { refreshUser } = useAuth();
 
   useEffect(() => {
-    // Initialize cart with selected membership
-    if (params.membershipId && params.membershipTitle) {
-      const prices = getItemPrice(params.membershipId as string);
-      setItems([
-        {
-          id: params.membershipId as string,
-          title: params.membershipTitle as string,
-          currentPrice: prices.currentPrice,
-          oldPrice: prices.oldPrice,
-        },
-      ]);
-    }
-  }, [params.membershipId, params.membershipTitle]);
+    loadCart();
+  }, []);
 
-  const itemCost = items.reduce((sum, it) => sum + it.currentPrice, 0);
+  useEffect(() => {
+    // Add to cart if membership selected
+    if (params.membershipId && params.membershipTitle && !isLoading) {
+      addMembershipToCart(
+        params.membershipId as string,
+        params.membershipTitle as string
+      );
+    }
+  }, [params.membershipId, params.membershipTitle, isLoading]);
+
+  const loadCart = async () => {
+    try {
+      setIsLoading(true);
+      const cart = await apiClient.getCart();
+
+      const cartItems: CartItem[] = cart.items.map((item) => ({
+        id: item.id,
+        title: item.membershipPlan.name,
+        currentPrice: item.price,
+        oldPrice: item.membershipPlan.oldPrice || undefined,
+        membershipPlanId: item.membershipPlanId,
+        quantity: item.quantity,
+      }));
+
+      setItems(cartItems);
+    } catch (error: any) {
+      console.error("Error loading cart:", error);
+      // Cart might be empty or not created yet
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addMembershipToCart = async (membershipId: string, title: string) => {
+    try {
+      setIsProcessing(true);
+
+      // Check if item already in cart
+      const existingItem = items.find(
+        (item) => item.membershipPlanId === membershipId
+      );
+
+      if (existingItem) {
+        Toast.show({
+          type: "info",
+          text1: "Already in Cart",
+          text2: `${title} is already in your cart.`,
+          position: "top",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Add to cart via API
+      await apiClient.addToCart(membershipId, 1);
+
+      // Reload cart
+      await loadCart();
+
+      Toast.show({
+        type: "success",
+        text1: "Added to Cart",
+        text2: `${title} has been added to your cart.`,
+        position: "top",
+      });
+    } catch (error: any) {
+      console.error("Error adding to cart:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to add item to cart. Please try again.",
+        position: "top",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const itemCost = items.reduce(
+    (sum, it) => sum + it.currentPrice * it.quantity,
+    0
+  );
   const discount = 0;
   const totalPrice = itemCost - discount;
 
@@ -78,34 +137,36 @@ const CartScreen = () => {
 
     setIsProcessing(true);
 
-    // Map membership ID to membership type
-    const membershipId = items[0].id;
-    let membershipType: "BASIC" | "PREMIUM" | "PREMIUM_PLUS";
-
-    switch (membershipId) {
-      case "1":
-        membershipType = "BASIC";
-        break;
-      case "2":
-        membershipType = "PREMIUM";
-        break;
-      case "3":
-        membershipType = "PREMIUM_PLUS";
-        break;
-      default:
-        membershipType = "BASIC";
-    }
-
     try {
-      console.log("🛒 Starting checkout for membership:", membershipType);
+      console.log("🛒 Starting checkout from cart...");
 
-      // Update user's membership in the backend
-      const updatedUser = await apiClient.updateMembership(membershipType);
-      console.log("✅ Membership updated:", updatedUser);
+      // Create order from cart
+      const order = await apiClient.checkoutFromCart();
+      console.log("✅ Order created:", order);
 
       // Refresh the user data in context
       await refreshUser();
       console.log("✅ User context refreshed");
+
+      // Show success toast
+      Toast.show({
+        type: "success",
+        text1: "Success!",
+        text2: `Your order has been placed successfully!`,
+        position: "top",
+        visibilityTime: 2000,
+      });
+
+      // Small delay to ensure toast shows before navigation
+      setTimeout(() => {
+        // Navigate to membership details page
+        router.replace({
+          pathname: "/membership-details",
+          params: {
+            membershipType: order.items[0]?.membershipPlan?.type || "BASIC",
+          },
+        });
+      }, 100);
     } catch (error: any) {
       console.error("❌ Checkout error:", error);
       console.error("Error details:", {
@@ -114,45 +175,40 @@ const CartScreen = () => {
         status: error.response?.status,
       });
 
-      // Even if API fails, we'll show error but not block the user
       Toast.show({
         type: "error",
-        text1: "Network Error",
+        text1: "Checkout Failed",
         text2:
           error.response?.data?.message ||
           "Please check your connection and try again.",
         position: "top",
         visibilityTime: 4000,
       });
-
+    } finally {
       setIsProcessing(false);
-      return; // Don't proceed with navigation if there's an error
     }
-
-    // Only proceed with success flow if no errors occurred
-    setIsProcessing(false);
-
-    // Show success toast
-    Toast.show({
-      type: "success",
-      text1: "Success!",
-      text2: `Your ${items[0].title} has been activated!`,
-      position: "top",
-      visibilityTime: 2000,
-    });
-
-    // Small delay to ensure toast shows before navigation
-    setTimeout(() => {
-      // Navigate to membership details page with the membership type
-      router.replace({
-        pathname: "/membership-details",
-        params: { membershipType: membershipType },
-      });
-    }, 100);
   };
 
-  const handleDelete = (id: string) => {
-    setItems((prev) => prev.filter((it) => it.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await apiClient.removeFromCart(id);
+      setItems((prev) => prev.filter((it) => it.id !== id));
+
+      Toast.show({
+        type: "success",
+        text1: "Removed",
+        text2: "Item removed from cart.",
+        position: "top",
+      });
+    } catch (error: any) {
+      console.error("Error removing item:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to remove item. Please try again.",
+        position: "top",
+      });
+    }
   };
 
   // Gmail-style swipe-to-delete background
@@ -192,84 +248,116 @@ const CartScreen = () => {
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Scroll content */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <Text style={styles.itemsCountText}>
-            Items in cart: {items.length}
-          </Text>
-
-          {items.map((item) => (
-            <Swipeable
-              key={item.id}
-              ref={(ref) => {
-                swipeRefs.current[item.id] = ref;
-              }}
-              renderRightActions={() => renderRightActions(item.id)}
-              overshootRight={false}
-              friction={1.5}
-              overshootFriction={8}
-              enableTrackpadTwoFingerGesture={false}
-              rightThreshold={80}
-              onSwipeableRightOpen={() => {
-                // Delete immediately on full swipe
-                handleDelete(item.id);
-              }}
+        {/* Loading state */}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007BFF" />
+            <Text style={styles.loadingText}>Loading cart...</Text>
+          </View>
+        ) : (
+          <>
+            {/* Scroll content */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
             >
-              <View style={styles.cartItem}>
-                <View style={styles.imageBox}>
-                  <View style={styles.imagePlaceholder} />
-                </View>
-                <View style={styles.itemContent}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.priceRow}>
-                    <Text style={styles.currentPrice}>
-                      ${item.currentPrice}
-                    </Text>
-                    <Text style={styles.slashText}> / </Text>
-                    <Text style={styles.oldPrice}>${item.oldPrice}</Text>
+              <Text style={styles.itemsCountText}>
+                Items in cart: {items.length}
+              </Text>
+
+              {items.length === 0 ? (
+                <View style={styles.emptyCart}>
+                  <Ionicons name="cart-outline" size={80} color="#CCC" />
+                  <Text style={styles.emptyCartText}>Your cart is empty</Text>
+                  <Text style={styles.emptyCartSubtext}>
+                    Add membership plans to get started
                   </Text>
                 </View>
+              ) : (
+                items.map((item) => (
+                  <Swipeable
+                    key={item.id}
+                    ref={(ref) => {
+                      swipeRefs.current[item.id] = ref;
+                    }}
+                    renderRightActions={() => renderRightActions(item.id)}
+                    overshootRight={false}
+                    friction={1.5}
+                    overshootFriction={8}
+                    enableTrackpadTwoFingerGesture={false}
+                    rightThreshold={80}
+                    onSwipeableRightOpen={() => {
+                      // Delete immediately on full swipe
+                      handleDelete(item.id);
+                    }}
+                  >
+                    <View style={styles.cartItem}>
+                      <View style={styles.imageBox}>
+                        <View style={styles.imagePlaceholder} />
+                      </View>
+                      <View style={styles.itemContent}>
+                        <Text style={styles.itemTitle}>{item.title}</Text>
+                        <Text style={styles.priceRow}>
+                          <Text style={styles.currentPrice}>
+                            ${item.currentPrice}
+                          </Text>
+                          {item.oldPrice && (
+                            <>
+                              <Text style={styles.slashText}> / </Text>
+                              <Text style={styles.oldPrice}>
+                                ${item.oldPrice}
+                              </Text>
+                            </>
+                          )}
+                        </Text>
+                        {item.quantity > 1 && (
+                          <Text style={styles.quantityText}>
+                            Quantity: {item.quantity}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  </Swipeable>
+                ))
+              )}
+            </ScrollView>
+
+            {/* Bottom summary */}
+            <View style={styles.bottomArea}>
+              <View style={styles.summaryBox}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Item Cost</Text>
+                  <Text style={styles.summaryValue}>${itemCost}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Discount</Text>
+                  <Text style={styles.summaryValue}>${discount}</Text>
+                </View>
+                <View style={[styles.summaryRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>Total Price</Text>
+                  <Text style={styles.totalValue}>${totalPrice}</Text>
+                </View>
               </View>
-            </Swipeable>
-          ))}
-        </ScrollView>
 
-        {/* Bottom summary */}
-        <View style={styles.bottomArea}>
-          <View style={styles.summaryBox}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Item Cost</Text>
-              <Text style={styles.summaryValue}>${itemCost}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.checkoutButton,
+                  (isProcessing || items.length === 0) &&
+                    styles.checkoutButtonDisabled,
+                ]}
+                onPress={handleCheckout}
+                activeOpacity={0.8}
+                disabled={isProcessing || items.length === 0}
+              >
+                {isProcessing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.checkoutText}>Checkout</Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount</Text>
-              <Text style={styles.summaryValue}>${discount}</Text>
-            </View>
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total Price</Text>
-              <Text style={styles.totalValue}>${totalPrice}</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.checkoutButton,
-              isProcessing && styles.checkoutButtonDisabled,
-            ]}
-            onPress={handleCheckout}
-            activeOpacity={0.8}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.checkoutText}>Checkout</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -307,12 +395,42 @@ const styles = StyleSheet.create({
     color: "#111",
   },
 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+
   scrollContent: { paddingBottom: 180 },
   itemsCountText: {
     fontSize: 16,
     color: "#111",
     marginBottom: 16,
     fontWeight: "600",
+  },
+
+  emptyCart: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  emptyCartText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 24,
+  },
+  emptyCartSubtext: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 8,
   },
 
   cartItem: {
@@ -356,6 +474,11 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
     fontSize: 13,
     textDecorationLine: "line-through",
+  },
+  quantityText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 4,
   },
 
   swipeBackground: {
