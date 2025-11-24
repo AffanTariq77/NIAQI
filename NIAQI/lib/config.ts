@@ -1,11 +1,15 @@
 // Environment Configuration
 // Update these values based on your development setup
 
+// Get environment variables from .env file
+const API_HOST = process.env.EXPO_PUBLIC_API_HOST || "10.162.133.229";
+const API_PORT = process.env.EXPO_PUBLIC_API_PORT || "5000";
+
 export const API_CONFIG = {
   // For development, replace with your machine's IP address
   // Find your IP with: ifconfig (macOS/Linux) or ipconfig (Windows)
   BASE_URL: __DEV__
-    ? "http://10.162.133.229:5000/api" // Your Mac's actual WiFi IP (en0)
+    ? `http://${API_HOST}:${API_PORT}/api` // Configured via .env
     : "https://your-production-api.com/api",
 
   // Timeout for API requests (in milliseconds)
