@@ -1,5 +1,22 @@
-import { apiClient, AuthResponse, clearStoredUser, ForgotPasswordRequest, getStoredUser, ResetPasswordRequest, setStoredUser, SignInRequest, SignUpRequest, User } from '@/lib/api-client';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import {
+  apiClient,
+  AuthResponse,
+  clearStoredUser,
+  ForgotPasswordRequest,
+  getStoredUser,
+  ResetPasswordRequest,
+  setStoredUser,
+  SignInRequest,
+  SignUpRequest,
+  User,
+} from "@/lib/api-client";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface AuthContextType {
   user: User | null;
@@ -34,10 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       setIsLoading(true);
-      
+
       // Check if we have stored tokens
       const { accessToken, refreshToken } = await apiClient.getStoredTokens();
-      
+
       if (accessToken && refreshToken) {
         // Try to get current user to validate token
         try {
@@ -48,7 +65,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Token might be expired, try to refresh
           try {
             const authResponse = await apiClient.refreshToken({ refreshToken });
-            await apiClient.setTokens(authResponse.accessToken, authResponse.refreshToken);
+            await apiClient.setTokens(
+              authResponse.accessToken,
+              authResponse.refreshToken
+            );
             await setStoredUser(authResponse.user);
             setUser(authResponse.user);
           } catch (refreshError) {
@@ -66,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Auth initialization error:', error);
+      console.error("Auth initialization error:", error);
       await apiClient.clearTokens();
       await clearStoredUser();
       setUser(null);
@@ -77,26 +97,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (data: SignUpRequest): Promise<AuthResponse> => {
     try {
+      console.log("📝 Starting sign-up process...");
       const response = await apiClient.signUp(data);
+      console.log("✅ Sign-up response received:", {
+        userName: response.user.name,
+        userEmail: response.user.email,
+        membershipType: response.user.membershipType,
+      });
       await apiClient.setTokens(response.accessToken, response.refreshToken);
       await setStoredUser(response.user);
       setUser(response.user);
+      console.log("✅ User state updated in context after sign-up");
       return response;
     } catch (error) {
-      console.error('Sign up error:', error);
+      console.error("❌ Sign up error:", error);
       throw error;
     }
   };
 
   const signIn = async (data: SignInRequest): Promise<AuthResponse> => {
     try {
+      console.log("🔐 Signing in...");
       const response = await apiClient.signIn(data);
+      console.log("✅ Sign-in response received:", {
+        userName: response.user.name,
+        userEmail: response.user.email,
+        membershipType: response.user.membershipType,
+      });
       await apiClient.setTokens(response.accessToken, response.refreshToken);
       await setStoredUser(response.user);
       setUser(response.user);
+      console.log("✅ User state updated in context");
       return response;
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error("❌ Sign in error:", error);
       throw error;
     }
   };
@@ -108,7 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await apiClient.logout(refreshToken);
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       await apiClient.clearTokens();
       await clearStoredUser();
@@ -116,11 +150,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const forgotPassword = async (data: ForgotPasswordRequest): Promise<string> => {
+  const forgotPassword = async (
+    data: ForgotPasswordRequest
+  ): Promise<string> => {
     try {
       return await apiClient.forgotPassword(data);
     } catch (error) {
-      console.error('Forgot password error:', error);
+      console.error("Forgot password error:", error);
       throw error;
     }
   };
@@ -129,7 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await apiClient.resetPassword(data);
     } catch (error) {
-      console.error('Reset password error:', error);
+      console.error("Reset password error:", error);
       throw error;
     }
   };
@@ -138,7 +174,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await apiClient.confirmEmail(userId, token);
     } catch (error) {
-      console.error('Confirm email error:', error);
+      console.error("Confirm email error:", error);
       throw error;
     }
   };
@@ -146,12 +182,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshUser = async (): Promise<void> => {
     try {
       if (isAuthenticated) {
+        console.log("🔄 Refreshing user data...");
         const currentUser = await apiClient.getCurrentUser();
+        console.log("✅ User data refreshed:", {
+          name: currentUser.name,
+          email: currentUser.email,
+          membershipType: currentUser.membershipType,
+        });
         setUser(currentUser);
         await setStoredUser(currentUser);
+      } else {
+        console.log("⚠️ Cannot refresh user - not authenticated");
       }
     } catch (error) {
-      console.error('Refresh user error:', error);
+      console.error("❌ Refresh user error:", error);
       // If refresh fails, user might be logged out
       await signOut();
     }
@@ -176,7 +220,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

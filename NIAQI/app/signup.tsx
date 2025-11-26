@@ -1,7 +1,7 @@
 import BackgroundGradient from "@/components/BackgroundGradient";
 import CustomTextInput from "@/components/CustomTextInput";
 import PrimaryButton from "@/components/PrimaryButton";
-import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/lib/auth-context";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const SignUpScreen = () => {
+  const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -119,7 +120,7 @@ const SignUpScreen = () => {
       console.log("  Email:", email);
       console.log("  Password length:", password.length);
 
-      await apiClient.signUp({
+      const response = await signUp({
         name,
         email,
         password,
@@ -127,12 +128,13 @@ const SignUpScreen = () => {
       });
 
       console.log("✅ SignUp Screen - Signup successful");
+      console.log("✅ User authenticated with name:", response.user.name);
 
       // Show success and navigate to account created screen
       Toast.show({
         type: "success",
         text1: "Account Created!",
-        text2: "Redirecting...",
+        text2: `Welcome ${response.user.name}!`,
       });
 
       // Navigate to account created screen after a short delay
@@ -234,7 +236,7 @@ const SignUpScreen = () => {
                 label="Name"
                 value={name}
                 onChangeText={handleNameChange}
-                placeholder="Heather Delaporte"
+                placeholder="Full Name"
                 autoCapitalize="words"
                 showCheck={nameValid}
               />
@@ -244,7 +246,7 @@ const SignUpScreen = () => {
                 label="Email"
                 value={email}
                 onChangeText={handleEmailChange}
-                placeholder="heather.ues@gmail.com"
+                placeholder="user@gmail.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}

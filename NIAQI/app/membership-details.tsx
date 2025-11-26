@@ -257,6 +257,12 @@ const MembershipDetailsScreen = () => {
       router.push("/course-reminder-discounts");
     } else if (feature.id === "4") {
       router.push("/sponsor-discounts");
+    } else if (feature.id === "5") {
+      // Resource Library
+      router.push("/resources");
+    } else if (feature.id === "6") {
+      // Documents & Processes
+      router.push("/resources");
     }
   };
 

@@ -9,7 +9,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
-  membershipType: "BASIC" | "PREMIUM" | "PREMIUM_PLUS";
+  membershipType: "BASIC" | "PREMIUM" | "PREMIUM_PLUS" | null;
   isEmailConfirmed: boolean;
   createdAt: string;
 }
@@ -162,6 +162,33 @@ export interface StudentProfile {
   updatedAt: string;
 }
 
+// Document types (Google Drive sync)
+export interface Document {
+  id: string;
+  driveId: string;
+  name: string;
+  mimeType: string;
+  modifiedTime: string;
+  size: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentsResponse {
+  success: boolean;
+  count: number;
+  data: Document[];
+}
+
+export interface SyncResponse {
+  success: boolean;
+  message: string;
+  newFiles: number;
+  updatedFiles: number;
+  skippedFiles: number;
+  totalFiles: number;
+}
+
 export interface CreateStudentProfileRequest {
   phoneNumber?: string;
   dateOfBirth?: string;
@@ -245,7 +272,17 @@ class ApiClient {
       async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Don't retry on auth endpoints or if already retried
+        const isAuthEndpoint =
+          originalRequest.url?.includes("/auth/signin") ||
+          originalRequest.url?.includes("/auth/signup") ||
+          originalRequest.url?.includes("/auth/refresh-token");
+
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAuthEndpoint
+        ) {
           if (this.isRefreshing) {
             // If already refreshing, queue the request
             return new Promise((resolve, reject) => {
@@ -267,6 +304,8 @@ class ApiClient {
               STORAGE_KEYS.REFRESH_TOKEN
             );
             if (!refreshToken) {
+              // No refresh token, clear everything and reject
+              await this.clearTokens();
               throw new Error("No refresh token available");
             }
 
@@ -547,6 +586,28 @@ class ApiClient {
 
   async deleteStudentProfile(): Promise<void> {
     await this.client.delete("/student-profile");
+  }
+
+  // Documents API methods (Google Drive sync)
+  async getDocuments(): Promise<DocumentsResponse> {
+    const response = await this.client.get<DocumentsResponse>("/documents");
+    return response.data;
+  }
+
+  async downloadDocument(documentId: string): Promise<Blob> {
+    const response = await this.client.get(`/documents/${documentId}`, {
+      responseType: "blob",
+    });
+    return response.data;
+  }
+
+  async triggerDocumentSync(): Promise<SyncResponse> {
+    const response = await this.client.get<SyncResponse>("/documents/sync/now");
+    return response.data;
+  }
+
+  getDocumentDownloadUrl(documentId: string): string {
+    return `${this.client.defaults.baseURL}/documents/${documentId}`;
   }
 }
 

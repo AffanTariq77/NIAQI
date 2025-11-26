@@ -20,6 +20,18 @@ export const API_CONFIG = {
   RETRY_DELAY: 1000,
 };
 
+// Kajabi Configuration
+export const KAJABI_CONFIG = {
+  // Your Kajabi storefront URL (configurable via .env)
+  STOREFRONT_URL:
+    process.env.EXPO_PUBLIC_KAJABI_STOREFRONT_URL ||
+    "https://niaqi.mykajabi.com",
+
+  // Alternative URLs for different environments
+  // PRODUCTION_URL: "https://your-custom-domain.com",
+  // STAGING_URL: "https://staging.mykajabi.com",
+};
+
 // Instructions for finding your IP address:
 //
 // macOS/Linux:

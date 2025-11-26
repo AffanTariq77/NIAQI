@@ -1,14 +1,23 @@
-import BackgroundGradient from '@/components/BackgroundGradient';
-import CustomTextInput from '@/components/CustomTextInput';
-import { apiClient } from '@/lib/api-client';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
+import BackgroundGradient from "@/components/BackgroundGradient";
+import CustomTextInput from "@/components/CustomTextInput";
+import { apiClient } from "@/lib/api-client";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 const ForgotPasswordScreen = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailValid, setEmailValid] = useState(false);
 
@@ -25,9 +34,9 @@ const ForgotPasswordScreen = () => {
   const handleSend = async () => {
     if (!emailValid) {
       Toast.show({
-        type: 'error',
-        text1: 'Invalid Email',
-        text2: 'Please enter a valid email address.',
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address.",
       });
       return;
     }
@@ -35,14 +44,16 @@ const ForgotPasswordScreen = () => {
     setIsLoading(true);
     try {
       await apiClient.forgotPassword({ email });
-      
+
       // Navigate to confirmation screen
-      router.push('/password-reset-done');
+      router.push("/password-reset-done");
     } catch (error: any) {
       Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: error?.response?.data?.message || 'Failed to send reset email. Please try again.',
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.message ||
+          "Failed to send reset email. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -57,7 +68,7 @@ const ForgotPasswordScreen = () => {
       </View>
       <KeyboardAvoidingView
         style={styles.contentContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <SafeAreaView style={styles.safeArea}>
           <ScrollView
@@ -82,27 +93,31 @@ const ForgotPasswordScreen = () => {
             {/* Content */}
             <View style={styles.content}>
               <Text style={styles.instructions}>
-                Please enter your email address. You will receive a link to create a new password via email.
+                Please enter your email address. You will receive a link to
+                create a new password via email.
               </Text>
 
               <CustomTextInput
                 label="Email"
                 value={email}
                 onChangeText={handleEmailChange}
-                placeholder="heather.ues@gmail.com"
+                placeholder="user@gmail.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 showCheck={emailValid}
               />
 
-              <TouchableOpacity 
-                style={[styles.sendButton, (!emailValid || isLoading) && styles.sendButtonDisabled]} 
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  (!emailValid || isLoading) && styles.sendButtonDisabled,
+                ]}
                 onPress={handleSend}
                 disabled={!emailValid || isLoading}
               >
                 <Text style={styles.sendButtonText}>
-                  {isLoading ? 'Sending...' : 'Send'}
+                  {isLoading ? "Sending..." : "Send"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -118,7 +133,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -137,39 +152,39 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingTop: 50,
     paddingBottom: 10,
     paddingHorizontal: 20,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     left: 20,
     zIndex: 1,
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   backIcon: {
     fontSize: 24,
-    color: '#333333',
-    fontWeight: 'bold',
+    color: "#333333",
+    fontWeight: "bold",
     marginTop: -20,
   },
   headerTitleContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: "bold",
+    color: "#333333",
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerSpacer: {
     width: 40,
@@ -181,27 +196,26 @@ const styles = StyleSheet.create({
   },
   instructions: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
     lineHeight: 20,
     marginBottom: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   sendButton: {
-    backgroundColor: '#000000',
+    backgroundColor: "#000000",
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   sendButtonDisabled: {
     opacity: 0.6,
   },
   sendButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
 export default ForgotPasswordScreen;
-

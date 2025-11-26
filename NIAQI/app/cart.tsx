@@ -40,11 +40,23 @@ const CartScreen = () => {
 
   useEffect(() => {
     // Add to cart if membership selected
+    console.log("🛒 CART SCREEN - Received params:", params);
+    console.log("  - membershipId:", params.membershipId);
+    console.log("  - membershipTitle:", params.membershipTitle);
+    console.log("  - isLoading:", isLoading);
+
     if (params.membershipId && params.membershipTitle && !isLoading) {
+      console.log("✅ Conditions met, adding to cart...");
       addMembershipToCart(
         params.membershipId as string,
         params.membershipTitle as string
       );
+    } else {
+      console.log("❌ Conditions NOT met:", {
+        hasMembershipId: !!params.membershipId,
+        hasMembershipTitle: !!params.membershipTitle,
+        isLoading,
+      });
     }
   }, [params.membershipId, params.membershipTitle, isLoading]);
 
@@ -74,6 +86,10 @@ const CartScreen = () => {
 
   const addMembershipToCart = async (membershipId: string, title: string) => {
     try {
+      console.log("📦 ADD TO CART FUNCTION CALLED:");
+      console.log("  - membershipId:", membershipId);
+      console.log("  - title:", title);
+
       setIsProcessing(true);
 
       // Check if item already in cart
@@ -82,6 +98,7 @@ const CartScreen = () => {
       );
 
       if (existingItem) {
+        console.log("ℹ️ Item already in cart:", existingItem);
         Toast.show({
           type: "info",
           text1: "Already in Cart",
@@ -93,9 +110,12 @@ const CartScreen = () => {
       }
 
       // Add to cart via API
+      console.log("📤 Calling API to add to cart...");
       await apiClient.addToCart(membershipId, 1);
+      console.log("✅ API call successful");
 
       // Reload cart
+      console.log("🔄 Reloading cart...");
       await loadCart();
 
       Toast.show({
@@ -144,9 +164,12 @@ const CartScreen = () => {
       const order = await apiClient.checkoutFromCart();
       console.log("✅ Order created:", order);
 
-      // Refresh the user data in context
+      // Wait a moment to ensure backend updates are complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Refresh the user data in context to get updated membership
       await refreshUser();
-      console.log("✅ User context refreshed");
+      console.log("✅ User context refreshed with updated membership");
 
       // Show success toast
       Toast.show({
@@ -159,14 +182,9 @@ const CartScreen = () => {
 
       // Small delay to ensure toast shows before navigation
       setTimeout(() => {
-        // Navigate to membership details page
-        router.replace({
-          pathname: "/membership-details",
-          params: {
-            membershipType: order.items[0]?.membershipPlan?.type || "BASIC",
-          },
-        });
-      }, 100);
+        // Navigate to home screen to see updated membership
+        router.replace("/(tabs)");
+      }, 1500);
     } catch (error: any) {
       console.error("❌ Checkout error:", error);
       console.error("Error details:", {

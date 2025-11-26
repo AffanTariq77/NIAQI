@@ -202,9 +202,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
 );
 
 const HomeScreen = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [searchText, setSearchText] = useState("");
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [expandedCard, setExpandedCard] = useState<string | null>("1"); // Expand first card (Basic) by default
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [memberships, setMemberships] = useState<Membership[]>(mockMemberships);
   const [isLoadingMemberships, setIsLoadingMemberships] = useState(false);
@@ -217,6 +217,25 @@ const HomeScreen = () => {
   const dash1Width = useSharedValue(32);
   const dash2Width = useSharedValue(24);
   const dash3Width = useSharedValue(24);
+
+  // Refresh user data when home screen mounts
+  useEffect(() => {
+    // Small delay to ensure sign-in/sign-up process completes
+    const timer = setTimeout(() => {
+      console.log("🏠 Home screen: Checking authentication...");
+      console.log("🏠 Current user state:", user);
+
+      // Only refresh if user is already authenticated
+      if (user && user.id) {
+        console.log("🏠 User authenticated, refreshing data...");
+        refreshUser();
+      } else {
+        console.log("🏠 User not authenticated yet, skipping refresh");
+      }
+    }, 1000); // Increased to 1 second
+
+    return () => clearTimeout(timer);
+  }, [user?.id]); // Depend on user.id instead of empty array
 
   // Fetch membership plans from API
   useEffect(() => {
@@ -248,10 +267,15 @@ const HomeScreen = () => {
 
   const handleStartNow = (membershipId: string) => {
     const selectedMembership = memberships.find((m) => m.id === membershipId);
-    console.log("🛒 Adding to cart:", {
+    console.log("🛒 START NOW CLICKED:");
+    console.log("  - Membership ID:", membershipId);
+    console.log("  - Selected Membership:", selectedMembership);
+    console.log("  - All Memberships:", memberships);
+    console.log("  - Navigating to cart with params:", {
       membershipId,
-      title: selectedMembership?.title,
+      membershipTitle: selectedMembership?.title || "",
     });
+
     router.push({
       pathname: "/cart",
       params: {
@@ -403,7 +427,7 @@ const HomeScreen = () => {
               <View style={styles.welcomeTextContainer}>
                 <Text style={styles.welcomeText}>Welcome Back!</Text>
                 <Text style={styles.userName}>
-                  {user?.name || "Heather Delaporte"}
+                  {user?.name || "Loading..."}
                 </Text>
               </View>
 
@@ -458,22 +482,100 @@ const HomeScreen = () => {
 
           {/* My Courses */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>My Courses</Text>
-            {isLoadingMemberships ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#5A7CFF" />
-                <Text style={styles.loadingText}>Loading memberships...</Text>
+            <Text style={styles.sectionTitle}>
+              {user?.membershipType ? "Your Membership" : "Choose Your Plan"}
+            </Text>
+
+            {user?.membershipType ? (
+              // User has a membership - show their current plan
+              <View style={styles.currentMembershipCard}>
+                <View style={styles.currentMembershipHeader}>
+                  <View style={styles.currentMembershipBadge}>
+                    <Ionicons
+                      name={
+                        user.membershipType === "PREMIUM_PLUS"
+                          ? "diamond"
+                          : user.membershipType === "PREMIUM"
+                          ? "star"
+                          : "checkmark-circle"
+                      }
+                      size={24}
+                      color={
+                        user.membershipType === "PREMIUM_PLUS"
+                          ? "#FFD700"
+                          : user.membershipType === "PREMIUM"
+                          ? "#5A7CFF"
+                          : "#10B981"
+                      }
+                    />
+                  </View>
+                  <View style={styles.currentMembershipInfo}>
+                    <Text style={styles.currentMembershipLabel}>
+                      Active Plan
+                    </Text>
+                    <Text style={styles.currentMembershipName}>
+                      {user.membershipType === "PREMIUM_PLUS"
+                        ? "Premium Plus"
+                        : user.membershipType === "PREMIUM"
+                        ? "Premium"
+                        : "Basic"}{" "}
+                      Membership
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.viewBenefitsButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/membership-details",
+                      params: { membershipType: user.membershipType },
+                    })
+                  }
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.viewBenefitsButtonText}>
+                    View Benefits
+                  </Text>
+                  <Ionicons name="arrow-forward" size={16} color="#5A7CFF" />
+                </TouchableOpacity>
+
+                {user.membershipType !== "PREMIUM_PLUS" && (
+                  <TouchableOpacity
+                    style={styles.upgradeNowButton}
+                    onPress={() => router.push("/upgrade")}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.upgradeNowButtonText}>
+                      {user.membershipType === "BASIC"
+                        ? "Upgrade to Premium"
+                        : "Upgrade to Premium Plus"}
+                    </Text>
+                    <Ionicons name="arrow-up" size={16} color="#FFF" />
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
-              memberships.map((membership) => (
-                <CourseCard
-                  key={membership.id}
-                  membership={membership}
-                  isExpanded={expandedCard === membership.id}
-                  onToggle={() => handleToggleCard(membership.id)}
-                  onStartNow={() => handleStartNow(membership.id)}
-                />
-              ))
+              // User doesn't have any membership - show all plans
+              <>
+                {isLoadingMemberships ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#5A7CFF" />
+                    <Text style={styles.loadingText}>
+                      Loading memberships...
+                    </Text>
+                  </View>
+                ) : (
+                  memberships.map((membership) => (
+                    <CourseCard
+                      key={membership.id}
+                      membership={membership}
+                      isExpanded={expandedCard === membership.id}
+                      onToggle={() => handleToggleCard(membership.id)}
+                      onStartNow={() => handleStartNow(membership.id)}
+                    />
+                  ))
+                )}
+              </>
             )}
           </View>
         </ScrollView>
@@ -673,6 +775,79 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333333",
     marginBottom: 16,
+  },
+
+  currentMembershipCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#B3B3B3",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "rgba(206, 202, 202, 0.5)",
+  },
+  currentMembershipHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  currentMembershipBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#F7F8FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  currentMembershipInfo: {
+    flex: 1,
+  },
+  currentMembershipLabel: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 4,
+  },
+  currentMembershipName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1C1C1E",
+  },
+  viewBenefitsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#5A7CFF",
+    marginBottom: 12,
+    gap: 6,
+  },
+  viewBenefitsButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#5A7CFF",
+  },
+  upgradeNowButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: "#5A7CFF",
+    gap: 6,
+  },
+  upgradeNowButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 
   loadingContainer: {
