@@ -139,10 +139,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const { refreshToken } = await apiClient.getStoredTokens();
       if (refreshToken) {
+        // Attempt to call logout endpoint (optional - may not exist on backend)
         await apiClient.logout(refreshToken);
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      // Logout errors are non-critical - we'll clear local data regardless
+      // The important part is clearing tokens and user state below
     } finally {
       await apiClient.clearTokens();
       await clearStoredUser();

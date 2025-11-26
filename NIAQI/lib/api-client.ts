@@ -452,7 +452,15 @@ class ApiClient {
       return;
     }
     try {
+      // Try to call logout endpoint if it exists
+      // If it returns 404, we'll just clear tokens locally
       await this.client.post("/auth/logout", { refreshToken });
+    } catch (error: any) {
+      // Silently handle 404 - backend logout endpoint is optional for JWT
+      // The important part is clearing local tokens which happens in finally
+      if (error.response?.status !== 404) {
+        console.warn("Logout endpoint error (non-critical):", error.message);
+      }
     } finally {
       await this.clearTokens();
     }
