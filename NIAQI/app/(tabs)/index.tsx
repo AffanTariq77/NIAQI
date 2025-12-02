@@ -245,7 +245,40 @@ const HomeScreen = () => {
         const plans = await apiClient.getMembershipPlans();
 
         // Convert API plans to Membership format
-        const convertedPlans = plans.map(convertToMembership);
+        let convertedPlans = plans.map(convertToMembership);
+
+        // Filter out memberships that are lower than or equal to user's current membership
+        if (user?.membershipType) {
+          const membershipHierarchy = {
+            BASIC: 1,
+            PREMIUM: 2,
+            PREMIUM_PLUS: 3,
+          };
+
+          const currentLevel =
+            membershipHierarchy[
+              user.membershipType as keyof typeof membershipHierarchy
+            ] || 0;
+
+          convertedPlans = convertedPlans.filter((plan) => {
+            // Extract membership type from plan title
+            let planType = "BASIC";
+            if (plan.title.includes("Premium Plus")) {
+              planType = "PREMIUM_PLUS";
+            } else if (plan.title.includes("Premium")) {
+              planType = "PREMIUM";
+            }
+
+            const planLevel =
+              membershipHierarchy[
+                planType as keyof typeof membershipHierarchy
+              ] || 0;
+
+            // Only show plans higher than current membership
+            return planLevel > currentLevel;
+          });
+        }
+
         setMemberships(convertedPlans);
 
         console.log("✅ Loaded membership plans from API:", convertedPlans);
@@ -259,7 +292,7 @@ const HomeScreen = () => {
     };
 
     fetchMembershipPlans();
-  }, []);
+  }, [user?.membershipType]); // Re-fetch when membership type changes
 
   const handleToggleCard = (id: string) => {
     setExpandedCard(expandedCard === id ? null : id);
@@ -270,7 +303,22 @@ const HomeScreen = () => {
     console.log("🛒 START NOW CLICKED:");
     console.log("  - Membership ID:", membershipId);
     console.log("  - Selected Membership:", selectedMembership);
-    console.log("  - All Memberships:", memberships);
+    console.log("  - User authenticated:", !!user);
+
+    // Check if user is authenticated
+    if (!user) {
+      console.log("  - User not authenticated, redirecting to login");
+      router.push({
+        pathname: "/login",
+        params: {
+          redirect: "/cart",
+          membershipId: membershipId,
+          membershipTitle: selectedMembership?.title || "",
+        },
+      });
+      return;
+    }
+
     console.log("  - Navigating to cart with params:", {
       membershipId,
       membershipTitle: selectedMembership?.title || "",
@@ -554,29 +602,41 @@ const HomeScreen = () => {
                   </TouchableOpacity>
                 )}
               </View>
-            ) : (
-              // User doesn't have any membership - show all plans
+            ) : null}
+
+            {/* Show available upgrades or all plans */}
+            {isLoadingMemberships ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#5A7CFF" />
+                <Text style={styles.loadingText}>Loading memberships...</Text>
+              </View>
+            ) : memberships.length > 0 ? (
               <>
-                {isLoadingMemberships ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#5A7CFF" />
-                    <Text style={styles.loadingText}>
-                      Loading memberships...
-                    </Text>
-                  </View>
-                ) : (
-                  memberships.map((membership) => (
-                    <CourseCard
-                      key={membership.id}
-                      membership={membership}
-                      isExpanded={expandedCard === membership.id}
-                      onToggle={() => handleToggleCard(membership.id)}
-                      onStartNow={() => handleStartNow(membership.id)}
-                    />
-                  ))
+                {user?.membershipType && (
+                  <Text style={styles.upgradeSectionTitle}>
+                    Available Upgrades
+                  </Text>
                 )}
+                {memberships.map((membership) => (
+                  <CourseCard
+                    key={membership.id}
+                    membership={membership}
+                    isExpanded={expandedCard === membership.id}
+                    onToggle={() => handleToggleCard(membership.id)}
+                    onStartNow={() => handleStartNow(membership.id)}
+                  />
+                ))}
               </>
-            )}
+            ) : user?.membershipType === "PREMIUM_PLUS" ? (
+              <View style={styles.maxTierContainer}>
+                <Ionicons name="trophy" size={48} color="#FFD700" />
+                <Text style={styles.maxTierTitle}>You're at the Top! 🎉</Text>
+                <Text style={styles.maxTierDescription}>
+                  You have the highest membership tier with access to all
+                  premium features and benefits.
+                </Text>
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -936,6 +996,39 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   startNowText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  upgradeSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1C1C1E",
+    marginTop: 24,
+    marginBottom: 16,
+    marginLeft: 16,
+  },
+  maxTierContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+    marginHorizontal: 16,
+    marginTop: 20,
+    backgroundColor: "#FFF9E6",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#FFD700",
+  },
+  maxTierTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1C1C1E",
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  maxTierDescription: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 24,
+  },
 });
 
 export default HomeScreen;

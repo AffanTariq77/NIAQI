@@ -610,12 +610,14 @@ class ApiClient {
   }
 
   async triggerDocumentSync(): Promise<SyncResponse> {
-    const response = await this.client.get<SyncResponse>("/documents/sync/now");
+    const response = await this.client.post<SyncResponse>("/documents/sync");
     return response.data;
   }
 
-  getDocumentDownloadUrl(documentId: string): string {
-    return `${this.client.defaults.baseURL}/documents/${documentId}`;
+  async getDocumentDownloadUrl(documentId: string): Promise<string> {
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    const baseUrl = this.client.defaults.baseURL;
+    return `${baseUrl}/documents/${documentId}/download?token=${token || ""}`;
   }
 }
 

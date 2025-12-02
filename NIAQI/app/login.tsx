@@ -1,7 +1,7 @@
 import BackgroundGradient from "@/components/BackgroundGradient";
 import { useAuth } from "@/lib/auth-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const LoginScreen = () => {
+  const params = useLocalSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -87,7 +88,19 @@ const LoginScreen = () => {
         text1: "Welcome Back!",
         text2: `Hello ${response.user.name}!`,
       });
-      router.replace("/(tabs)");
+
+      // Check if there's a redirect with membership params
+      if (params.redirect && params.membershipId) {
+        router.replace({
+          pathname: params.redirect as string,
+          params: {
+            membershipId: params.membershipId as string,
+            membershipTitle: params.membershipTitle as string,
+          },
+        });
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch (error: any) {
       Toast.show({
         type: "error",

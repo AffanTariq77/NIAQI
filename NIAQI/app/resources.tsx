@@ -9,13 +9,17 @@ import {
   RefreshControl,
   Alert,
   Platform,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { apiClient, Document } from "@/lib/api-client";
 import { Paths, File } from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import BackgroundGradient from "@/components/BackgroundGradient";
 
 const STORAGE_KEY = "viewed_documents";
 
@@ -71,7 +75,7 @@ const ResourceLibraryScreen = () => {
       }
     } catch (error) {
       console.error("Failed to fetch documents:", error);
-      Alert.alert("Error", "Failed to load documents. Please try again.");
+      // Don't show error alert for now - documents may not be synced yet
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -83,7 +87,7 @@ const ResourceLibraryScreen = () => {
     try {
       setDownloadingId(document.id);
 
-      const downloadUrl = apiClient.getDocumentDownloadUrl(document.id);
+      const downloadUrl = await apiClient.getDocumentDownloadUrl(document.id);
 
       // Determine file extension
       let fileExtension = ".pdf"; // Default to PDF
@@ -97,31 +101,60 @@ const ResourceLibraryScreen = () => {
         ? document.name
         : `${document.name}${fileExtension}`;
 
+      // Create a file reference using the new API
       const file = new File(Paths.document, fileName);
 
-      // Download using fetch and write to file
+      // Download the file
       const response = await fetch(downloadUrl);
-      const blob = await response.blob();
-      const buffer = await blob.arrayBuffer();
-
-      await file.create();
-      await file.write(new Uint8Array(buffer));
-
-      // Mark as viewed
-      await markAsViewed(document.id);
-
-      // Share/Open the file
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: document.mimeType,
-          dialogTitle: "Open Document",
-          UTI: document.mimeType,
-        });
-      } else {
-        Alert.alert("Success", "Document downloaded successfully!", [
-          { text: "OK" },
-        ]);
+      if (!response.ok) {
+        throw new Error(`Failed to download: ${response.statusText}`);
       }
+
+      // Get the file as a blob
+      const blob = await response.blob();
+
+      // Create the file
+      await file.create();
+
+      // Convert blob to ArrayBuffer and write using a Promise
+      await new Promise<void>((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onloadend = async () => {
+          try {
+            const arrayBuffer = reader.result as ArrayBuffer;
+            await file.write(new Uint8Array(arrayBuffer));
+
+            console.log("✅ Document downloaded to:", file.uri);
+
+            // Mark as viewed
+            await markAsViewed(document.id);
+
+            // Share/Open the file
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(file.uri, {
+                mimeType: document.mimeType,
+                dialogTitle: "Open Document",
+                UTI: document.mimeType,
+              });
+            } else {
+              Alert.alert("Success", "Document downloaded successfully!", [
+                { text: "OK" },
+              ]);
+            }
+
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        };
+
+        reader.onerror = () => {
+          reject(new Error("Failed to read file"));
+        };
+
+        reader.readAsArrayBuffer(blob);
+      });
     } catch (error) {
       console.error("Failed to download document:", error);
       Alert.alert(
@@ -130,6 +163,43 @@ const ResourceLibraryScreen = () => {
       );
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  // Preview document in browser/viewer
+  const handlePreviewDocument = async (document: Document) => {
+    try {
+      // Mark as viewed
+      await markAsViewed(document.id);
+
+      const downloadUrl = await apiClient.getDocumentDownloadUrl(document.id);
+
+      // For images and PDFs, try to open in browser
+      if (
+        document.mimeType.includes("image") ||
+        document.mimeType.includes("pdf")
+      ) {
+        await WebBrowser.openBrowserAsync(downloadUrl);
+      } else {
+        // For other types, prompt to download
+        Alert.alert(
+          "Preview Not Available",
+          "Would you like to download this document?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Download",
+              onPress: () => handleDownloadDocument(document),
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Failed to preview document:", error);
+      Alert.alert(
+        "Preview Failed",
+        "Unable to preview the document. Try downloading instead."
+      );
     }
   };
 
@@ -148,7 +218,10 @@ const ResourceLibraryScreen = () => {
       }
     } catch (error) {
       console.error("Sync failed:", error);
-      Alert.alert("Sync Failed", "Unable to sync documents.");
+      Alert.alert(
+        "Sync Failed",
+        "Unable to sync documents. Make sure Google Drive is configured properly."
+      );
     } finally {
       setRefreshing(false);
     }
@@ -214,49 +287,66 @@ const ResourceLibraryScreen = () => {
     const downloading = downloadingId === item.id;
 
     return (
-      <TouchableOpacity
-        style={[styles.documentCard, viewed && styles.viewedCard]}
-        onPress={() => handleDownloadDocument(item)}
-        disabled={downloading}
-        activeOpacity={0.7}
-      >
-        <View style={styles.iconContainer}>
-          <Ionicons
-            name={getFileIcon(item.mimeType) as any}
-            size={32}
-            color={viewed ? "#9DAFFB" : "#54DAE2"}
-          />
-          {viewed && (
-            <View style={styles.viewedBadge}>
-              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-            </View>
-          )}
-        </View>
-
-        <View style={styles.documentInfo}>
-          <Text style={styles.documentName} numberOfLines={2}>
-            {item.name}
-          </Text>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>{formatFileSize(item.size)}</Text>
-            <Text style={styles.metaDivider}>•</Text>
-            <Text style={styles.metaText}>{formatDate(item.modifiedTime)}</Text>
+      <View style={[styles.documentCard, viewed && styles.viewedCard]}>
+        <TouchableOpacity
+          style={styles.documentMainContent}
+          onPress={() => handlePreviewDocument(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.iconContainer}>
+            <Ionicons
+              name={getFileIcon(item.mimeType) as any}
+              size={32}
+              color={viewed ? "#9DAFFB" : "#54DAE2"}
+            />
+            {viewed && (
+              <View style={styles.viewedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+              </View>
+            )}
           </View>
-          {viewed && viewedDocs[item.id] && (
-            <Text style={styles.viewedText}>
-              Viewed {viewedDocs[item.id].viewCount} time(s)
-            </Text>
-          )}
-        </View>
 
-        <View style={styles.actionButton}>
-          {downloading ? (
-            <ActivityIndicator size="small" color="#54DAE2" />
-          ) : (
-            <Ionicons name="download-outline" size={24} color="#54DAE2" />
-          )}
+          <View style={styles.documentInfo}>
+            <Text style={styles.documentName} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaText}>{formatFileSize(item.size)}</Text>
+              <Text style={styles.metaDivider}>•</Text>
+              <Text style={styles.metaText}>
+                {formatDate(item.modifiedTime)}
+              </Text>
+            </View>
+            {viewed && viewedDocs[item.id] && (
+              <Text style={styles.viewedText}>
+                Viewed {viewedDocs[item.id].viewCount} time(s)
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handlePreviewDocument(item)}
+            disabled={downloading}
+          >
+            <Ionicons name="eye-outline" size={22} color="#9DAFFB" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleDownloadDocument(item)}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <ActivityIndicator size="small" color="#54DAE2" />
+            ) : (
+              <Ionicons name="download-outline" size={22} color="#54DAE2" />
+            )}
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -264,7 +354,6 @@ const ResourceLibraryScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerTop}>
         <View>
-          <Text style={styles.headerTitle}>Resource Library</Text>
           <Text style={styles.headerSubtitle}>
             {documents.length} document{documents.length !== 1 ? "s" : ""}{" "}
             available
@@ -320,7 +409,8 @@ const ResourceLibraryScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <BackgroundGradient />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#54DAE2" />
           <Text style={styles.loadingText}>Loading documents...</Text>
@@ -331,6 +421,20 @@ const ResourceLibraryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <BackgroundGradient />
+
+      {/* Header with back button */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.screenTitle}>Resource Library</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
       <FlatList
         data={documents}
         renderItem={renderDocument}
@@ -355,7 +459,30 @@ const ResourceLibraryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F7",
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: "transparent",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  screenTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1C1C1E",
+  },
+  headerSpacer: {
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -366,6 +493,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: "#666",
+    fontWeight: "500",
   },
   listContent: {
     padding: 16,
@@ -377,88 +505,93 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 16,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1C1C1E",
-    marginBottom: 4,
-  },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#666",
+    fontWeight: "500",
   },
   syncButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#54DAE2",
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
     gap: 6,
+    shadowColor: "#54DAE2",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   syncButtonText: {
     color: "#FFF",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   progressCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 20,
     padding: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   progressItem: {
     flex: 1,
     alignItems: "center",
   },
   progressValue: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
     color: "#54DAE2",
     marginBottom: 4,
   },
   progressLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
+    fontWeight: "600",
   },
   progressDivider: {
     width: 1,
-    backgroundColor: "#E8E8EA",
+    backgroundColor: "rgba(0,0,0,0.1)",
     marginHorizontal: 12,
   },
   documentCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   viewedCard: {
-    backgroundColor: "#F0F9FF",
-    borderWidth: 1,
+    backgroundColor: "rgba(157, 175, 251, 0.15)",
+    borderWidth: 1.5,
     borderColor: "#9DAFFB",
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: "#F0F9FF",
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "rgba(84, 218, 226, 0.15)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 14,
     position: "relative",
   },
   viewedBadge: {
@@ -466,73 +599,101 @@ const styles = StyleSheet.create({
     top: -4,
     right: -4,
     backgroundColor: "#FFF",
-    borderRadius: 10,
+    borderRadius: 12,
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   documentInfo: {
     flex: 1,
     justifyContent: "center",
   },
+  documentMainContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   documentName: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700",
     color: "#1C1C1E",
     marginBottom: 6,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
+    fontWeight: "500",
   },
   metaDivider: {
     marginHorizontal: 6,
     color: "#CCC",
   },
   viewedText: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#4CAF50",
-    fontWeight: "500",
+    fontWeight: "600",
     marginTop: 4,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginLeft: 12,
   },
   actionButton: {
     width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 12,
+    backgroundColor: "rgba(157, 175, 251, 0.1)",
   },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "700",
     color: "#1C1C1E",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 20,
+    marginBottom: 10,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#666",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 30,
+    fontWeight: "500",
+    paddingHorizontal: 40,
+    lineHeight: 22,
   },
   syncEmptyButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#54DAE2",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 28,
     gap: 8,
+    shadowColor: "#54DAE2",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   syncEmptyButtonText: {
     color: "#FFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });
 

@@ -29,24 +29,49 @@ type CartItem = {
 const CartScreen = () => {
   const params = useLocalSearchParams();
   const swipeRefs = useRef<Record<string, Swipeable | null>>({});
+  const hasProcessedParams = useRef(false);
   const [items, setItems] = useState<CartItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
 
+  // Check authentication on mount
   useEffect(() => {
-    loadCart();
+    if (!user) {
+      console.log("❌ User not authenticated, redirecting to login");
+      router.replace({
+        pathname: "/login",
+        params: {
+          redirect: "/cart",
+          membershipId: params.membershipId as string,
+          membershipTitle: params.membershipTitle as string,
+        },
+      });
+    }
   }, []);
 
   useEffect(() => {
-    // Add to cart if membership selected
+    if (user) {
+      loadCart();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Add to cart if membership selected (only once)
     console.log("🛒 CART SCREEN - Received params:", params);
     console.log("  - membershipId:", params.membershipId);
     console.log("  - membershipTitle:", params.membershipTitle);
     console.log("  - isLoading:", isLoading);
+    console.log("  - hasProcessedParams:", hasProcessedParams.current);
 
-    if (params.membershipId && params.membershipTitle && !isLoading) {
+    if (
+      params.membershipId &&
+      params.membershipTitle &&
+      !isLoading &&
+      !hasProcessedParams.current
+    ) {
       console.log("✅ Conditions met, adding to cart...");
+      hasProcessedParams.current = true;
       addMembershipToCart(
         params.membershipId as string,
         params.membershipTitle as string
@@ -56,6 +81,7 @@ const CartScreen = () => {
         hasMembershipId: !!params.membershipId,
         hasMembershipTitle: !!params.membershipTitle,
         isLoading,
+        hasProcessedParams: hasProcessedParams.current,
       });
     }
   }, [params.membershipId, params.membershipTitle, isLoading]);
@@ -92,24 +118,7 @@ const CartScreen = () => {
 
       setIsProcessing(true);
 
-      // Check if item already in cart
-      const existingItem = items.find(
-        (item) => item.membershipPlanId === membershipId
-      );
-
-      if (existingItem) {
-        console.log("ℹ️ Item already in cart:", existingItem);
-        Toast.show({
-          type: "info",
-          text1: "Already in Cart",
-          text2: `${title} is already in your cart.`,
-          position: "top",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
-      // Add to cart via API
+      // Add to cart via API (backend will handle tier replacement)
       console.log("📤 Calling API to add to cart...");
       await apiClient.addToCart(membershipId, 1);
       console.log("✅ API call successful");
