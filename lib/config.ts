@@ -1,8 +1,23 @@
 // Environment Configuration
 // Update these values based on your development setup
+import { Platform } from 'react-native';
 
 // Get environment variables from .env file
-const API_HOST = process.env.EXPO_PUBLIC_API_HOST || "10.162.133.229";
+// For iOS simulator, use localhost. For physical devices, use your machine's IP
+const getApiHost = () => {
+  if (Platform.OS === 'ios' && !__DEV__) {
+    return "172.16.0.29"; // Production or physical device
+  }
+  // iOS Simulator should use localhost
+  if (Platform.OS === 'ios') {
+    return "localhost";
+  }
+  // For Android emulator, use 10.0.2.2 (special alias to host machine)
+  // For physical Android devices, use your machine's IP
+  return process.env.EXPO_PUBLIC_API_HOST || "172.16.0.29";
+};
+
+const API_HOST = getApiHost();
 const API_PORT = process.env.EXPO_PUBLIC_API_PORT || "5000";
 
 export const API_CONFIG = {
