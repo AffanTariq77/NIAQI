@@ -90,9 +90,14 @@ const LoginScreen = () => {
       });
 
       // Check if there's a redirect with membership params
-      if (params.redirect && params.membershipId) {
+      if (
+        typeof params.redirect === "string" &&
+        typeof params.membershipId === "string"
+      ) {
+        // cast to `any` after a runtime guard so the router's strict pathname union types are bypassed safely
+        const redirectPath: any = params.redirect;
         router.replace({
-          pathname: params.redirect as string,
+          pathname: redirectPath,
           params: {
             membershipId: params.membershipId as string,
             membershipTitle: params.membershipTitle as string,
