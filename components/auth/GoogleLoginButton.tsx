@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { API_CONFIG } from "@/lib/config";
 import * as WebBrowser from "expo-web-browser";
@@ -31,9 +32,13 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     try {
       setIsLoading(true);
 
-      // Get the API base URL without /api suffix
-      const apiBaseUrl = API_CONFIG.BASE_URL.replace("/api", "");
-      const googleAuthUrl = `${apiBaseUrl}/api/auth/google`;
+      // For mobile OAuth, we use localhost in the browser URL
+      // because the browser (Chrome Custom Tab) runs on the host, not in the emulator
+      // The app itself uses 10.0.2.2, but the browser uses localhost
+      const googleAuthUrl =
+        Platform.OS === "android"
+          ? "http://localhost:5000/api/auth/google" // Browser on host can use localhost
+          : `${API_CONFIG.BASE_URL.replace("/api", "")}/api/auth/google`;
 
       console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
 
@@ -119,13 +124,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginTop: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     elevation: 3,
   },
   googleIconContainer: {

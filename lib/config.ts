@@ -5,7 +5,18 @@ import { Platform } from "react-native";
 // Get environment variables from .env file
 // For iOS simulator, use localhost. For physical devices, use your machine's IP
 const getApiHost = () => {
-  // Use localhost for development
+  // iOS Simulator can use localhost
+  if (Platform.OS === "ios") {
+    return "localhost";
+  }
+
+  // Android Emulator: Use 10.0.2.2 (special alias to host machine)
+  // This allows Android to reach Mac's localhost
+  if (Platform.OS === "android") {
+    return "10.0.2.2";
+  }
+
+  // Web/other platforms
   return "localhost";
 };
 
