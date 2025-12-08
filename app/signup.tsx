@@ -1,6 +1,7 @@
 import BackgroundGradient from "@/components/BackgroundGradient";
 import CustomTextInput from "@/components/CustomTextInput";
 import PrimaryButton from "@/components/PrimaryButton";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { useAuth } from "@/lib/auth-context";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -19,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const SignUpScreen = () => {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -168,12 +169,37 @@ const SignUpScreen = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // Handle Google sign in
+  const handleGoogleSuccess = async (token: string) => {
+    try {
+      console.log("✅ Google OAuth successful, signing in with token");
+      await signInWithGoogle(token);
+      
+      Toast.show({
+        type: "success",
+        text1: "Welcome!",
+        text2: "Successfully signed in with Google",
+      });
+
+      // Navigate to home after successful login
+      setTimeout(() => {
+        router.replace("/student-base-data");
+      }, 500);
+    } catch (error: any) {
+      console.error("❌ Error signing in with Google:", error);
+      Toast.show({
+        type: "error",
+        text1: "Sign In Failed",
+        text2: error?.message || "Failed to sign in with Google",
+      });
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    console.error("❌ Google OAuth error:", error);
     Toast.show({
-      type: "info",
-      text1: "Google Sign In",
-      text2: "Google sign in feature coming soon.",
+      type: "error",
+      text1: "Google Sign In Failed",
+      text2: error,
     });
   };
 
@@ -351,21 +377,10 @@ const SignUpScreen = () => {
               </View>
 
               {/* Google Sign In Button */}
-              <TouchableOpacity
-                style={styles.googleButton}
-                onPress={handleGoogleSignIn}
-                activeOpacity={0.8}
-              >
-                <View style={styles.googleIconContainer}>
-                  <Image
-                    source={require("../assets/google.png")}
-                    style={styles.googleIconImage}
-                  />
-                </View>
-                <Text style={styles.googleButtonText}>
-                  Continue with Google
-                </Text>
-              </TouchableOpacity>
+              <GoogleLoginButton
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+              />
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -472,32 +487,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000000",
     fontWeight: "600",
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 20,
-  },
-  googleIconContainer: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  googleIconImage: {
-    width: 24,
-    height: 24,
-    resizeMode: "contain",
-  },
-  googleButtonText: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#000000",
   },
   passwordRequirements: {
     marginTop: -8,
