@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient, MembershipPlan } from "@/lib/api-client";
 import Toast from "react-native-toast-message";
+import { useStripe } from "@stripe/stripe-react-native";
 
 type CartItem = {
   id: string;
@@ -34,6 +35,7 @@ const CartScreen = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { refreshUser, user } = useAuth();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   // Check authentication on mount
   useEffect(() => {
@@ -167,33 +169,69 @@ const CartScreen = () => {
     setIsProcessing(true);
 
     try {
-      console.log("🛒 Starting checkout from cart...");
+      console.log("� Starting Stripe checkout...");
 
-      // Create order from cart
-      const order = await apiClient.checkoutFromCart();
+      // Step 1: Create payment intent from backend
+      const { clientSecret, paymentIntentId } =
+        await apiClient.createPaymentIntent();
+      console.log("✅ Payment Intent created:", paymentIntentId);
+
+      // Step 2: Initialize Stripe Payment Sheet
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: "NIAQI",
+        returnURL: "niaqi://stripe-redirect",
+        defaultBillingDetails: {
+          name: user?.name,
+          email: user?.email,
+        },
+      });
+
+      if (initError) {
+        console.error("❌ Error initializing payment sheet:", initError);
+        throw new Error(initError.message);
+      }
+
+      console.log("✅ Payment sheet initialized");
+
+      // Step 3: Present Payment Sheet to user
+      const { error: paymentError } = await presentPaymentSheet();
+
+      if (paymentError) {
+        // User cancelled or error occurred
+        console.log("❌ Payment cancelled or failed:", paymentError);
+        Toast.show({
+          type: "error",
+          text1: "Payment Cancelled",
+          text2: paymentError.message || "Payment was not completed.",
+          position: "top",
+        });
+        return;
+      }
+
+      console.log("✅ Payment successful! Verifying...");
+
+      // Step 4: Verify payment on backend and create order
+      const order = await apiClient.verifyPayment(paymentIntentId);
       console.log("✅ Order created:", order);
 
-      // Wait a moment to ensure backend updates are complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Refresh the user data in context to get updated membership
+      // Step 5: Refresh user data to get updated membership
       await refreshUser();
       console.log("✅ User context refreshed with updated membership");
 
-      // Show success toast
+      // Step 6: Show success message
       Toast.show({
         type: "success",
-        text1: "Success!",
-        text2: `Your order has been placed successfully!`,
+        text1: "Payment Successful! 🎉",
+        text2: `Your ${items[0]?.title} membership is now active!`,
         position: "top",
-        visibilityTime: 2000,
+        visibilityTime: 3000,
       });
 
-      // Small delay to ensure toast shows before navigation
+      // Step 7: Navigate to home to see updated membership
       setTimeout(() => {
-        // Navigate to home screen to see updated membership
         router.replace("/(tabs)");
-      }, 1500);
+      }, 2000);
     } catch (error: any) {
       console.error("❌ Checkout error:", error);
       console.error("Error details:", {
@@ -207,6 +245,7 @@ const CartScreen = () => {
         text1: "Checkout Failed",
         text2:
           error.response?.data?.message ||
+          error.message ||
           "Please check your connection and try again.",
         position: "top",
         visibilityTime: 4000,

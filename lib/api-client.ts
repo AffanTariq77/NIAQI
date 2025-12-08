@@ -619,6 +619,34 @@ class ApiClient {
     const baseUrl = this.client.defaults.baseURL;
     return `${baseUrl}/documents/${documentId}/download?token=${token || ""}`;
   }
+
+  // Stripe Payment API methods
+  async createPaymentIntent(): Promise<{
+    clientSecret: string;
+    paymentIntentId: string;
+  }> {
+    const response = await this.client.post<{
+      clientSecret: string;
+      paymentIntentId: string;
+    }>("/stripe/create-payment-intent");
+    return response.data;
+  }
+
+  async verifyPayment(paymentIntentId: string): Promise<Order> {
+    const response = await this.client.post<Order>("/stripe/verify-payment", {
+      paymentIntentId,
+    });
+    return response.data;
+  }
+
+  async getPaymentStatus(
+    paymentIntentId: string
+  ): Promise<{ status: string; amount: number }> {
+    const response = await this.client.get<{ status: string; amount: number }>(
+      `/stripe/payment-status/${paymentIntentId}`
+    );
+    return response.data;
+  }
 }
 
 // Create singleton instance
