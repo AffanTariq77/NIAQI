@@ -24,6 +24,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   signUp: (data: SignUpRequest) => Promise<AuthResponse>;
   signIn: (data: SignInRequest) => Promise<AuthResponse>;
+  signInWithGoogle: (token: string, refreshToken?: string) => Promise<void>;
   signOut: () => Promise<void>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<string>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
@@ -203,12 +204,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async (
+    token: string,
+    refreshToken?: string
+  ): Promise<void> => {
+    try {
+      console.log("🔐 Signing in with Google OAuth token...");
+
+      // Store the tokens
+      await apiClient.setTokens(token, refreshToken || token);
+
+      // Get the current user data
+      const currentUser = await apiClient.getCurrentUser();
+      console.log("✅ Google OAuth user data retrieved:", {
+        name: currentUser.name,
+        email: currentUser.email,
+      });
+
+      setUser(currentUser);
+      await setStoredUser(currentUser);
+    } catch (error) {
+      console.error("❌ Google sign-in error:", error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     forgotPassword,
     resetPassword,

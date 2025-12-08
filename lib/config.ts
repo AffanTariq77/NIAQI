@@ -5,8 +5,8 @@ import { Platform } from "react-native";
 // Get environment variables from .env file
 // For iOS simulator, use localhost. For physical devices, use your machine's IP
 const getApiHost = () => {
-  // Use network IP for iOS Simulator
-  return "172.16.0.29";
+  // Use localhost for development
+  return "localhost";
 };
 
 const API_HOST = getApiHost();
@@ -16,7 +16,7 @@ export const API_CONFIG = {
   // For development, replace with your machine's IP address
   // Find your IP with: ifconfig (macOS/Linux) or ipconfig (Windows)
   BASE_URL: __DEV__
-    ? `http://${API_HOST}:${API_PORT}/api` // Using network IP
+    ? `http://${API_HOST}:${API_PORT}/api` // Using localhost
     : "https://your-production-api.com/api",
 
   // Timeout for API requests (in milliseconds)

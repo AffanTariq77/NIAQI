@@ -34,7 +34,7 @@ const LoginScreen = () => {
   const [emailValid, setEmailValid] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(30);
@@ -156,18 +156,35 @@ const LoginScreen = () => {
     router.push("/forgot-password");
   };
 
-  const handleGoogleSuccess = (token: string) => {
-    console.log("✅ Google OAuth token received:", token);
-    Toast.show({
-      type: "success",
-      text1: "Welcome!",
-      text2: "Successfully signed in with Google.",
-    });
+  const handleGoogleSuccess = async (token: string) => {
+    console.log(
+      "✅ Google OAuth token received:",
+      token.substring(0, 20) + "..."
+    );
 
-    // Navigate to dashboard
-    setTimeout(() => {
-      router.replace("/(tabs)");
-    }, 1000);
+    try {
+      // Use the auth context to sign in with Google
+      await signInWithGoogle(token);
+
+      Toast.show({
+        type: "success",
+        text1: "Welcome!",
+        text2: "Successfully signed in with Google.",
+      });
+
+      // Navigate to dashboard
+      setTimeout(() => {
+        router.replace("/(tabs)");
+      }, 1000);
+    } catch (error: any) {
+      console.error("❌ Error completing Google sign-in:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.message || "Failed to complete sign in. Please try again.",
+      });
+    }
   };
 
   const handleGoogleError = (error: string) => {

@@ -33,35 +33,49 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
       // Get the API base URL without /api suffix
       const apiBaseUrl = API_CONFIG.BASE_URL.replace("/api", "");
-      const googleAuthUrl = `${apiBaseUrl}/auth/google`;
+      const googleAuthUrl = `${apiBaseUrl}/api/auth/google`;
 
       console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
 
+      // Create the redirect URL using the app scheme (niaqi://)
+      const redirectUrl = Linking.createURL("/login");
+      console.log("🔙 Redirect URL:", redirectUrl);
+
       // Open Google OAuth flow in browser
+      // This will open Safari/Chrome, backend redirects to Google,
+      // Google redirects back to backend callback,
+      // Backend redirects to niaqi://login?auth=success&token=...
       const result = await WebBrowser.openAuthSessionAsync(
         googleAuthUrl,
-        Linking.createURL("/login")
+        redirectUrl
       );
 
       console.log("📱 Auth session result:", result);
 
       if (result.type === "success" && result.url) {
-        // Parse the callback URL
+        // Parse the callback URL from backend
         const url = new URL(result.url);
         const auth = url.searchParams.get("auth");
         const token = url.searchParams.get("token");
+        const refreshToken = url.searchParams.get("refreshToken");
         const error = url.searchParams.get("message");
 
         if (auth === "success" && token) {
-          console.log("✅ Google OAuth successful");
+          console.log("✅ Google OAuth successful, token received");
           onSuccess?.(token);
         } else if (auth === "error") {
           console.error("❌ Google OAuth error:", error);
           onError?.(error || "Authentication failed");
+        } else {
+          console.warn("⚠️ Unexpected auth result:", { auth, token });
+          onError?.("Unexpected authentication response");
         }
       } else if (result.type === "cancel") {
         console.log("❌ User cancelled Google OAuth");
         onError?.("Authentication cancelled");
+      } else {
+        console.log("❌ Auth session dismissed");
+        onError?.("Authentication session closed");
       }
     } catch (error: any) {
       console.error("❌ Google OAuth error:", error);
