@@ -39,6 +39,15 @@ export const KAJABI_CONFIG = {
   // STAGING_URL: "https://staging.mykajabi.com",
 };
 
+// Stripe Configuration
+export const STRIPE_CONFIG = {
+  PUBLISHABLE_KEY:
+    process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+    "pk_test_51Sc3o43f4cU2mk6c9EpJ2omzaRPoWDjk6SNikcpSxuZ9TzB7zszomdxsaUcS51ZCS8s8BhKQQpr9UAdOLII6lmNj00JIe16HiH",
+  MERCHANT_NAME: "NIAQI",
+  RETURN_URL: "niaqi://stripe-redirect",
+};
+
 // Instructions for finding your IP address:
 //
 // macOS/Linux:
