@@ -180,9 +180,9 @@ const SignUpScreen = () => {
         text2: "Successfully signed in with Google",
       });
 
-      // Navigate to home after successful login
+      // Navigate to home (membership page) after successful login
       setTimeout(() => {
-        router.replace("/student-base-data");
+        router.replace("/(tabs)");
       }, 500);
     } catch (error: any) {
       console.error("❌ Error signing in with Google:", error);
