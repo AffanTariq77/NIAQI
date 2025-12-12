@@ -173,7 +173,7 @@ const SignUpScreen = () => {
     try {
       console.log("✅ Google OAuth successful, signing in with token");
       await signInWithGoogle(token);
-      
+
       Toast.show({
         type: "success",
         text1: "Welcome!",

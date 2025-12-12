@@ -4,7 +4,7 @@
     "slug": "NIAQI",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "niaqi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -35,7 +35,23 @@
               "scheme": "niaqi"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "niaqi"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -64,7 +80,15 @@
       "reactCompiler": true
     },
     "updates": {
-      "enabled": false
-    }
+      "enabled": false,
+      "url": "https://u.expo.dev/0121ef5f-93e1-4417-9619-c07dac6babc8"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0121ef5f-93e1-4417-9619-c07dac6babc8"
+      }
+    },
+    "runtimeVersion": "1.0.0"
   }
 }

@@ -3,8 +3,19 @@
 import { Platform } from "react-native";
 
 // Get environment variables from .env file
+const ENV_API_HOST = process.env.EXPO_PUBLIC_API_HOST;
+const ENV_API_PORT = process.env.EXPO_PUBLIC_API_PORT;
+const ENV_API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || "http";
+
+// Get environment variables from .env file
 // For iOS simulator, use localhost. For physical devices, use your machine's IP
 const getApiHost = () => {
+  // If environment variable is set, use it (production)
+  if (ENV_API_HOST && ENV_API_HOST !== "localhost" && ENV_API_HOST !== "127.0.0.1") {
+    return ENV_API_HOST;
+  }
+
+  // Development: platform-specific localhost handling
   // iOS Simulator can use localhost
   if (Platform.OS === "ios") {
     return "localhost";
@@ -21,14 +32,17 @@ const getApiHost = () => {
 };
 
 const API_HOST = getApiHost();
-const API_PORT = "5000";
+const API_PORT = ENV_API_PORT || "5000";
+const API_PROTOCOL = ENV_API_PROTOCOL;
+
+// Determine if we're using production backend
+const isProduction = API_HOST.includes("onrender.com") || API_HOST.includes("railway.app");
 
 export const API_CONFIG = {
-  // For development, replace with your machine's IP address
-  // Find your IP with: ifconfig (macOS/Linux) or ipconfig (Windows)
-  BASE_URL: __DEV__
-    ? `http://${API_HOST}:${API_PORT}/api` // Using localhost
-    : "https://your-production-api.com/api",
+  // Automatically switch between development and production
+  BASE_URL: isProduction
+    ? `${API_PROTOCOL}://${API_HOST}/api` // Production: https://niaqi-backend.onrender.com/api
+    : `http://${API_HOST}:${API_PORT}/api`, // Development: http://localhost:5000/api
 
   // Timeout for API requests (in milliseconds)
   TIMEOUT: 10000,
