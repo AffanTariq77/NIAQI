@@ -10,16 +10,19 @@ const ENV_API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || "http";
 // Get environment variables from .env file
 // For iOS simulator, use localhost. For physical devices, use your machine's IP
 const getApiHost = () => {
-  // If environment variable is set, use it (production)
+  // PRIORITY 1: If environment variable is set to production URL, use it
   if (
     ENV_API_HOST &&
     ENV_API_HOST !== "localhost" &&
     ENV_API_HOST !== "127.0.0.1"
   ) {
+    console.log("🌍 Using PRODUCTION backend:", ENV_API_HOST);
     return ENV_API_HOST;
   }
 
-  // Development: platform-specific localhost handling
+  // PRIORITY 2: Development - platform-specific localhost handling
+  console.log("🏠 Using LOCAL development backend");
+  
   // iOS Simulator can use localhost
   if (Platform.OS === "ios") {
     return "localhost";
@@ -43,12 +46,22 @@ const API_PROTOCOL = ENV_API_PROTOCOL;
 const isProduction =
   API_HOST.includes("onrender.com") || API_HOST.includes("railway.app");
 
-export const API_CONFIG = {
-  // Automatically switch between development and production
-  BASE_URL: isProduction
-    ? `${API_PROTOCOL}://${API_HOST}/api` // Production: https://niaqi-backend.onrender.com/api
-    : `http://${API_HOST}:${API_PORT}/api`, // Development: http://localhost:5000/api
+// Build the full API URL
+const BASE_URL = isProduction
+  ? `${API_PROTOCOL}://${API_HOST}/api` // Production: https://niaqi-backend.onrender.com/api
+  : `http://${API_HOST}:${API_PORT}/api`; // Development: http://localhost:5000/api
 
+// Log the configuration for debugging
+console.log("📡 API Configuration:");
+console.log("  - Host:", API_HOST);
+console.log("  - Protocol:", API_PROTOCOL);
+console.log("  - Port:", API_PORT);
+console.log("  - Is Production:", isProduction);
+console.log("  - Full URL:", BASE_URL);
+console.log("✅ Backend URL configured!");
+
+export const API_CONFIG = {
+  BASE_URL,
   // Timeout for API requests (in milliseconds)
   TIMEOUT: 10000,
 
