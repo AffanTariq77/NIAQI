@@ -11,7 +11,11 @@ const ENV_API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || "http";
 // For iOS simulator, use localhost. For physical devices, use your machine's IP
 const getApiHost = () => {
   // If environment variable is set, use it (production)
-  if (ENV_API_HOST && ENV_API_HOST !== "localhost" && ENV_API_HOST !== "127.0.0.1") {
+  if (
+    ENV_API_HOST &&
+    ENV_API_HOST !== "localhost" &&
+    ENV_API_HOST !== "127.0.0.1"
+  ) {
     return ENV_API_HOST;
   }
 
@@ -36,7 +40,8 @@ const API_PORT = ENV_API_PORT || "5000";
 const API_PROTOCOL = ENV_API_PROTOCOL;
 
 // Determine if we're using production backend
-const isProduction = API_HOST.includes("onrender.com") || API_HOST.includes("railway.app");
+const isProduction =
+  API_HOST.includes("onrender.com") || API_HOST.includes("railway.app");
 
 export const API_CONFIG = {
   // Automatically switch between development and production
