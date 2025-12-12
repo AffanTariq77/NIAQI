@@ -6,13 +6,20 @@ import {
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Platform } from "react-native";
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
-import { StripeProvider } from "@stripe/stripe-react-native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider } from "@/lib/auth-context";
 import { STRIPE_CONFIG } from "@/lib/config";
+
+// Conditionally import Stripe only on native platforms
+let StripeProvider: any = ({ children }: { children: React.ReactNode }) => children;
+if (Platform.OS !== "web") {
+  const Stripe = require("@stripe/stripe-react-native");
+  StripeProvider = Stripe.StripeProvider;
+}
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -21,25 +28,19 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StripeProvider
-        publishableKey={STRIPE_CONFIG.PUBLISHABLE_KEY}
-        merchantIdentifier={STRIPE_CONFIG.MERCHANT_NAME}
-        urlScheme="niaqi"
+  const AppContent = (
+    <AuthProvider>
+      <ThemeProvider
+        value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
       >
-        <AuthProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="onboarding"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="signup" options={{ headerShown: false }} />
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="onboarding"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="signup" options={{ headerShown: false }} />
               <Stack.Screen
                 name="forgot-password"
                 options={{ headerShown: false }}
@@ -108,7 +109,21 @@ export default function RootLayout() {
             <Toast />
           </ThemeProvider>
         </AuthProvider>
-      </StripeProvider>
+  );
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {Platform.OS !== "web" ? (
+        <StripeProvider
+          publishableKey={STRIPE_CONFIG.PUBLISHABLE_KEY}
+          merchantIdentifier={STRIPE_CONFIG.MERCHANT_NAME}
+          urlScheme="niaqi"
+        >
+          {AppContent}
+        </StripeProvider>
+      ) : (
+        AppContent
+      )}
     </GestureHandlerRootView>
   );
 }
