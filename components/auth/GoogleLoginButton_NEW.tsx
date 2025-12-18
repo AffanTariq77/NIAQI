@@ -30,17 +30,19 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     try {
       setIsLoading(true);
 
-      // Create the deep link that the backend will redirect to
+      // Create the deep link that the HTML bridge will redirect to
       const redirectUri = Linking.createURL("login");
       console.log("🔙 App Redirect URL:", redirectUri);
 
-      // Use the regular Google auth endpoint
-      const googleAuthUrl = "https://niaqi-backend.onrender.com/api/auth/google";
+      // Use the mobile callback endpoint that returns HTML bridge
+      // This endpoint is accepted by Google as it's an HTTPS URL
+      const googleAuthUrl =
+        "https://niaqi-backend.onrender.com/api/auth/google/mobile-callback";
 
       console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
 
       // Open Google OAuth flow in browser
-      // Flow: /api/auth/google → Google → /callback → redirect to app
+      // Flow: Google Auth → Backend Callback → HTML Bridge → Deep Link to App
       const result = await WebBrowser.openAuthSessionAsync(
         googleAuthUrl,
         redirectUri
@@ -110,14 +112,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginTop: 20,
-    borderWidth: 1,
-    borderColor: "#E5E5E5",
-    // Remove elevation to avoid weird shadow on transparent background
+    elevation: 3,
   },
   googleIconContainer: {
     marginRight: 12,

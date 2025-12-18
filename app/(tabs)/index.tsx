@@ -202,7 +202,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 );
 
 const HomeScreen = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, isAuthenticated, refreshUser } = useAuth();
   const [searchText, setSearchText] = useState("");
   const [expandedCard, setExpandedCard] = useState<string | null>("1"); // Expand first card (Basic) by default
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -224,18 +224,19 @@ const HomeScreen = () => {
     const timer = setTimeout(() => {
       console.log("🏠 Home screen: Checking authentication...");
       console.log("🏠 Current user state:", user);
+      console.log("🏠 isAuthenticated:", isAuthenticated);
 
       // Only refresh if user is already authenticated
-      if (user && user.id) {
+      if (isAuthenticated && user && user.id) {
         console.log("🏠 User authenticated, refreshing data...");
         refreshUser();
       } else {
         console.log("🏠 User not authenticated yet, skipping refresh");
       }
-    }, 1000); // Increased to 1 second
+    }, 500); // Reduced to 500ms for faster response
 
     return () => clearTimeout(timer);
-  }, [user?.id]); // Depend on user.id instead of empty array
+  }, [isAuthenticated, user?.id]); // Depend on both isAuthenticated and user.id
 
   // Fetch membership plans from API
   useEffect(() => {
@@ -304,9 +305,11 @@ const HomeScreen = () => {
     console.log("  - Membership ID:", membershipId);
     console.log("  - Selected Membership:", selectedMembership);
     console.log("  - User authenticated:", !!user);
+    console.log("  - isAuthenticated:", isAuthenticated);
+    console.log("  - User object:", user);
 
-    // Check if user is authenticated
-    if (!user) {
+    // Check if user is authenticated using isAuthenticated flag (more reliable)
+    if (!isAuthenticated || !user) {
       console.log("  - User not authenticated, redirecting to login");
       router.push({
         pathname: "/login",
