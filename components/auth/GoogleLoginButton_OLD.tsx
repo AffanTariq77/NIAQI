@@ -6,8 +6,12 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
+  Platform,
+  Alert,
 } from "react-native";
+import { API_CONFIG } from "@/lib/config";
 import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 
 interface GoogleLoginButtonProps {
@@ -30,52 +34,57 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     try {
       setIsLoading(true);
 
-      // Create the deep link that the HTML bridge will redirect to
-      const redirectUri = Linking.createURL("login");
-      console.log("🔙 App Redirect URL:", redirectUri);
+      // Create the redirect URL - Expo AuthSession will handle the proper format
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'niaqi',
+        path: 'login'
+      });
 
-      // Use the mobile callback endpoint that returns HTML bridge
-      // This endpoint is accepted by Google as it's an HTTPS URL
-      const googleAuthUrl = "https://niaqi-backend.onrender.com/api/auth/google/mobile-callback";
+      console.log("� Redirect URL:", redirectUri);
 
-      console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
+      // Use production backend URL for Google OAuth
+      const googleAuthUrl = `https://niaqi-backend.onrender.com/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-      // Open Google OAuth flow in browser
-      // Flow: Google Auth → Backend Callback → HTML Bridge → Deep Link to App
-      const result = await WebBrowser.openAuthSessionAsync(
-        googleAuthUrl,
-        redirectUri
-      );
+      console.log("� Opening Google OAuth URL:", googleAuthUrl);
+
+      // Open Google OAuth flow in browser using AuthSession
+      // AuthSession properly handles the OAuth callback
+      const result = await AuthSession.startAsync({
+        authUrl: googleAuthUrl,
+        returnUrl: redirectUri,
+      });
 
       console.log("📱 Auth session result:", result);
 
-      if (result.type === "success" && result.url) {
-        // Parse the callback URL from the HTML bridge
-        const url = new URL(result.url);
-        const auth = url.searchParams.get("auth");
-        const token = url.searchParams.get("token");
-        const refreshToken = url.searchParams.get("refreshToken");
-        const error = url.searchParams.get("message");
+      if (result.type === "success" && result.params) {
+        const { auth, token, refreshToken, message } = result.params;
 
         if (auth === "success" && token) {
           console.log("✅ Google OAuth successful, token received");
           onSuccess?.(token);
         } else if (auth === "error") {
-          console.error("❌ Google OAuth error:", error);
-          onError?.(error || "Authentication failed");
+          console.error("❌ Google OAuth error:", message);
+          onError?.(message || "Authentication failed");
         } else {
-          console.warn("⚠️ Unexpected auth result:", { auth, token });
+          console.warn("⚠️ Unexpected auth result:", result.params);
           onError?.("Unexpected authentication response");
         }
       } else if (result.type === "cancel") {
         console.log("❌ User cancelled Google OAuth");
         onError?.("Authentication cancelled");
-      } else {
-        console.log("❌ Auth session dismissed");
+      } else if (result.type === "dismiss" || result.type === "locked") {
+        console.log("❌ Auth session dismissed or locked");
         onError?.("Authentication session closed");
+      } else {
+        console.log("❌ Unknown result type:", result.type);
+        onError?.("Authentication failed");
       }
     } catch (error: any) {
       console.error("❌ Google OAuth error:", error);
+      Alert.alert(
+        "Authentication Error",
+        error?.message || "An error occurred during authentication. Please try again."
+      );
       onError?.(error?.message || "An error occurred during authentication");
     } finally {
       setIsLoading(false);
