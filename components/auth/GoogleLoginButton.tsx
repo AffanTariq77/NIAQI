@@ -30,17 +30,19 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     try {
       setIsLoading(true);
 
-      // Create the deep link that the backend will redirect to
-      const redirectUri = Linking.createURL("login");
+      // Use custom scheme for deep linking (not Expo tunnel URL)
+      // This ensures the OAuth callback works properly
+      const redirectUri = "niaqi://login";
       console.log("🔙 App Redirect URL:", redirectUri);
 
-      // Use the regular Google auth endpoint
-      const googleAuthUrl = "https://niaqi-backend.onrender.com/api/auth/google";
+      // Construct the OAuth URL with the redirect_uri as a query parameter
+      // This tells the backend where to redirect after authentication
+      const googleAuthUrl = `https://niaqi-backend.onrender.com/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
       console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
 
       // Open Google OAuth flow in browser
-      // Flow: /api/auth/google → Google → /callback → redirect to app
+      // Flow: /api/auth/google → Google → /callback → HTML bridge → niaqi://login?token=...
       const result = await WebBrowser.openAuthSessionAsync(
         googleAuthUrl,
         redirectUri

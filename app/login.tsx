@@ -44,23 +44,38 @@ const LoginScreen = () => {
     slideAnim.value = withSpring(0, { damping: 15, stiffness: 150 });
   }, []);
 
-  // Handle OAuth callback
+  // Handle OAuth callback from deep link
   useEffect(() => {
     const authStatus = params.auth as string;
+    const token = params.token as string;
+    const refreshToken = params.refreshToken as string;
     const errorMessage = params.message as string;
 
-    if (authStatus === "success") {
-      console.log("✅ OAuth callback detected: success");
-      Toast.show({
-        type: "success",
-        text1: "Welcome!",
-        text2: "Successfully signed in with Google.",
-      });
+    if (authStatus === "success" && token) {
+      console.log("✅ OAuth callback detected: success with token");
+      
+      // Sign in with the received token
+      signInWithGoogle(token, refreshToken)
+        .then(() => {
+          Toast.show({
+            type: "success",
+            text1: "Welcome!",
+            text2: "Successfully signed in with Google.",
+          });
 
-      // Navigate to dashboard
-      setTimeout(() => {
-        router.replace("/(tabs)");
-      }, 1000);
+          // Navigate to dashboard
+          setTimeout(() => {
+            router.replace("/(tabs)");
+          }, 1000);
+        })
+        .catch((error) => {
+          console.error("❌ Error processing OAuth token:", error);
+          Toast.show({
+            type: "error",
+            text1: "Sign In Failed",
+            text2: error?.message || "Failed to complete sign in. Please try again.",
+          });
+        });
     } else if (authStatus === "error") {
       console.error("❌ OAuth callback detected: error -", errorMessage);
       Toast.show({
@@ -70,7 +85,7 @@ const LoginScreen = () => {
           errorMessage || "Failed to sign in with Google. Please try again.",
       });
     }
-  }, [params.auth, params.message]);
+  }, [params.auth, params.token, params.refreshToken, params.message]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
