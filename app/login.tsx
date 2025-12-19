@@ -53,7 +53,7 @@ const LoginScreen = () => {
 
     if (authStatus === "success" && token) {
       console.log("✅ OAuth callback detected: success with token");
-      
+
       // Sign in with the received token
       signInWithGoogle(token, refreshToken)
         .then(() => {
@@ -73,7 +73,8 @@ const LoginScreen = () => {
           Toast.show({
             type: "error",
             text1: "Sign In Failed",
-            text2: error?.message || "Failed to complete sign in. Please try again.",
+            text2:
+              error?.message || "Failed to complete sign in. Please try again.",
           });
         });
     } else if (authStatus === "error") {

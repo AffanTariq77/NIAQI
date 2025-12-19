@@ -37,7 +37,9 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
       // Construct the OAuth URL with the redirect_uri as a query parameter
       // This tells the backend where to redirect after authentication
-      const googleAuthUrl = `https://niaqi-backend.onrender.com/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const googleAuthUrl = `https://niaqi-backend.onrender.com/api/auth/google?redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}`;
 
       console.log("🔗 Opening Google OAuth URL:", googleAuthUrl);
 

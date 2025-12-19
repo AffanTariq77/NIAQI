@@ -1,11 +1,18 @@
-import BackgroundGradient from '@/components/BackgroundGradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import BackgroundGradient from "@/components/BackgroundGradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import {
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const StudentInfoScreen = () => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -19,10 +26,13 @@ const StudentInfoScreen = () => {
         </View>
       </View>
 
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Student Info</Text>
@@ -38,7 +48,7 @@ const StudentInfoScreen = () => {
         >
           {/* Main Profile Card */}
           <LinearGradient
-            colors={['#E8EEFF', '#F3E9FF', '#FDE7F4']}
+            colors={["#E8EEFF", "#F3E9FF", "#FDE7F4"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}
@@ -48,7 +58,7 @@ const StudentInfoScreen = () => {
               {/* Profile Image */}
               <View style={styles.profileImageContainer}>
                 <Image
-                  source={require('../assets/student1.png')}
+                  source={require("../assets/student1.png")}
                   style={styles.profileImage}
                   contentFit="cover"
                   cachePolicy="memory-disk"
@@ -68,8 +78,8 @@ const StudentInfoScreen = () => {
                 {/* Description Box */}
                 <View style={styles.descriptionBox}>
                   <Text style={styles.descriptionText}>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, Lorem ipsum dolor sit amet,
-                    consectetur adipiscing elit.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                   </Text>
                 </View>
               </View>
@@ -94,9 +104,9 @@ const StudentInfoScreen = () => {
               activeOpacity={0.7}
             >
               <Ionicons
-                name={isFavorite ? 'heart' : 'heart-outline'}
+                name={isFavorite ? "heart" : "heart-outline"}
                 size={28}
-                color={isFavorite ? '#FF3B30' : '#FFFFFF'}
+                color={isFavorite ? "#FF3B30" : "#FFFFFF"}
               />
             </TouchableOpacity>
           </LinearGradient>
@@ -105,9 +115,10 @@ const StudentInfoScreen = () => {
           <View style={styles.detailSection}>
             <Text style={styles.sectionTitle}>Profile</Text>
             <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-              exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
             </Text>
           </View>
 
@@ -115,9 +126,10 @@ const StudentInfoScreen = () => {
           <View style={styles.detailSection}>
             <Text style={styles.sectionTitle}>Career Path</Text>
             <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-              exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
             </Text>
           </View>
 
@@ -125,9 +137,10 @@ const StudentInfoScreen = () => {
           <View style={styles.detailSection}>
             <Text style={styles.sectionTitle}>Highlights</Text>
             <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-              exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
             </Text>
           </View>
         </ScrollView>
@@ -139,7 +152,7 @@ const StudentInfoScreen = () => {
 const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -148,17 +161,17 @@ const styles = StyleSheet.create({
   },
   backgroundFlip: {
     flex: 1,
-    transform: [{ rotate: '180deg' }],
+    transform: [{ rotate: "180deg" }],
   },
   container: {
     flex: 1,
     zIndex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 10,
@@ -166,23 +179,21 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
+    flex: 1,
+    textAlign: "center",
     fontSize: 18,
-    fontWeight: '700',
-    color: '#000',
+    fontWeight: "700",
+    color: "#000",
   },
   searchButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -197,36 +208,36 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 20,
     marginBottom: 28,
-    backgroundColor: '#DDACE5',
-    shadowColor: 'rgb(0, 0, 0)',
+    backgroundColor: "#DDACE5",
+    shadowColor: "rgb(0, 0, 0)",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
-    borderColor:'rgb(61, 58, 58)',
+    borderColor: "rgb(61, 58, 58)",
     elevation: 6,
-    marginTop:10,
-    position: 'relative',
+    marginTop: 10,
+    position: "relative",
   },
 
   /** Top Row (Image + Right content) **/
   topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 20,
   },
   profileImageContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
+    overflow: "hidden",
+    backgroundColor: "#fff",
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   rightContent: {
     flex: 1,
@@ -235,30 +246,30 @@ const styles = StyleSheet.create({
 
   /** Experience Badge **/
   experienceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2E57E8',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2E57E8",
     borderRadius: 25,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginBottom: 8,
   },
   experienceText: {
     fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: "#FFFFFF",
+    fontWeight: "600",
     marginLeft: 6,
   },
 
   /** Description box **/
   descriptionBox: {
-    backgroundColor: '#2E57E8',
+    backgroundColor: "#2E57E8",
     borderRadius: 20,
     padding: 10,
   },
   descriptionText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 12,
     lineHeight: 16,
   },
@@ -267,40 +278,40 @@ const styles = StyleSheet.create({
   nameSection: {
     borderRadius: 12,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 10,
   },
   studentName: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#2E57E8',
+    fontWeight: "700",
+    color: "#2E57E8",
     marginBottom: 3,
   },
   studentSpecialty: {
     fontSize: 13,
-    color: '#888',
+    color: "#888",
   },
 
   /** Contact Info **/
   contactSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 6,
   },
   contactText: {
     fontSize: 12,
-    color: '#4A5D9C',
+    color: "#4A5D9C",
   },
 
   /** Heart Icon **/
   heartButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 18,
     right: 18,
-    backgroundColor: 'rgba(212, 203, 203, 0.37)',
+    backgroundColor: "rgba(212, 203, 203, 0.37)",
     borderRadius: 50,
     padding: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -313,16 +324,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#2E57E8',
+    fontWeight: "700",
+    color: "#2E57E8",
     marginBottom: 6,
   },
   sectionText: {
     fontSize: 14,
-    color: '#3A3A3A',
+    color: "#3A3A3A",
     lineHeight: 20,
   },
 });
-
 
 export default StudentInfoScreen;
