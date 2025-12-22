@@ -513,6 +513,12 @@ class ApiClient {
     return response.data;
   }
 
+  // Kajabi proxy
+  async getKajabiCourses(): Promise<any[]> {
+    const response = await this.client.get<any[]>('/kajabi/courses');
+    return response.data;
+  }
+
   // Cart API methods
   async getCart(): Promise<Cart> {
     const response = await this.client.get<Cart>("/cart");

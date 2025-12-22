@@ -1,6 +1,7 @@
 import BackgroundGradient from "@/components/BackgroundGradient";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient, MembershipPlan } from "@/lib/api-client";
+import { getKajabiCourses } from '@/lib/kajabi-client';
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { BlurMask, Canvas, Circle } from "@shopify/react-native-skia";
 import { Image as ExpoImage } from "expo-image";
@@ -283,6 +284,23 @@ const HomeScreen = () => {
         setMemberships(convertedPlans);
 
         console.log("✅ Loaded membership plans from API:", convertedPlans);
+        // Also fetch Kajabi courses and append as additional offers (non-destructive)
+        try {
+          const kajabi = await getKajabiCourses();
+          if (kajabi && kajabi.length) {
+            console.log('✅ Kajabi courses loaded:', kajabi.length);
+            const extra = kajabi.map((c: any, idx: number) => ({
+              id: `kajabi-${c.id}-${idx}`,
+              title: c.title,
+              currentPrice: 0,
+              oldPrice: null,
+              features: [c.description || 'Kajabi course'],
+            }));
+            setMemberships((prev) => [...prev, ...extra]);
+          }
+        } catch (e) {
+          console.warn('Failed to load Kajabi courses', e);
+        }
       } catch (error) {
         console.error("❌ Error fetching membership plans:", error);
         console.log("Using mock data as fallback");
