@@ -285,23 +285,37 @@ const HomeScreen = () => {
 
         console.log("✅ Loaded membership plans from API:", convertedPlans);
         // Also fetch Kajabi products and append as additional offers (non-destructive)
+        // Fetch Kajabi products and merge without creating duplicate React keys
         try {
           const kajabi = await getKajabiProducts();
           if (kajabi && kajabi.length) {
             console.log("✅ Kajabi products loaded:", kajabi.length);
-            const extra = kajabi.map(
-              (c: any, idx: number) =>
-                ({
-                  id: `kajabi-${c.id}-${idx}`,
-                  title: c.title,
-                  price: "$0",
-                  oldPrice: "",
-                  rating: "4.8",
-                  ratingCount: 0,
-                  features: [c.description || "Kajabi product"],
-                } as Membership)
-            );
-            setMemberships((prev) => [...prev, ...extra]);
+            // Build stable ids and dedupe by product id
+            const existingIds = new Set(memberships.map((m) => String(m.id)));
+            const extra: Membership[] = [];
+            for (const c of kajabi) {
+              const baseId = `kajabi-${c.id}`;
+              // If already present, skip
+              if (existingIds.has(baseId)) continue;
+              // Ensure uniqueness if multiple items have same id (append counter)
+              let uniqueId = baseId;
+              let counter = 0;
+              while (existingIds.has(uniqueId)) {
+                counter += 1;
+                uniqueId = `${baseId}-${counter}`;
+              }
+              existingIds.add(uniqueId);
+              extra.push({
+                id: uniqueId,
+                title: c.title,
+                price: "$0",
+                oldPrice: "",
+                rating: "4.8",
+                ratingCount: 0,
+                features: [c.description || "Kajabi product"],
+              });
+            }
+            if (extra.length) setMemberships((prev) => [...prev, ...extra]);
           }
         } catch (e) {
           console.warn("Failed to load Kajabi products", e);

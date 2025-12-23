@@ -1,11 +1,20 @@
-import BackgroundGradient from '@/components/BackgroundGradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import BackgroundGradient from "@/components/BackgroundGradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import { getKajabiCustomers } from "@/lib/kajabi-client";
+import {
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Student {
   id: string;
@@ -17,46 +26,86 @@ interface Student {
 }
 
 const mockStudents: Student[] = [
-  { 
-    id: '1', 
-    name: 'Student Name', 
-    location: 'Location', 
-    specialty: 'Speciality / Remarks',
-    avatar: require('../assets/student1.png'),
+  {
+    id: "1",
+    name: "Student Name",
+    location: "Location",
+    specialty: "Speciality / Remarks",
+    avatar: require("../assets/student1.png"),
     isFavorite: false,
   },
-  { 
-    id: '2', 
-    name: 'Student Name', 
-    location: 'Location', 
-    specialty: 'Speciality / Remarks',
-    avatar: require('../assets/student2.png'),
+  {
+    id: "2",
+    name: "Student Name",
+    location: "Location",
+    specialty: "Speciality / Remarks",
+    avatar: require("../assets/student2.png"),
     isFavorite: false,
   },
-  { 
-    id: '3', 
-    name: 'Student Name', 
-    location: 'Location', 
-    specialty: 'Speciality / Remarks',
-    avatar: require('../assets/student3.png'),
+  {
+    id: "3",
+    name: "Student Name",
+    location: "Location",
+    specialty: "Speciality / Remarks",
+    avatar: require("../assets/student3.png"),
     isFavorite: false,
   },
-  { 
-    id: '4', 
-    name: 'Student Name', 
-    location: 'Location', 
-    specialty: 'Speciality / Remarks',
-    avatar: require('../assets/student4.png'),
+  {
+    id: "4",
+    name: "Student Name",
+    location: "Location",
+    specialty: "Speciality / Remarks",
+    avatar: require("../assets/student4.png"),
     isFavorite: false,
   },
 ];
 
 const StudentBaseDataScreen = () => {
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [kajabiStudents, setKajabiStudents] = useState<Array<{
+    id: string;
+    name: string;
+    location: string;
+    specialty: string;
+    avatar?: any;
+    isFavorite?: boolean;
+  }> | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getKajabiCustomers(1, 50);
+        if (!mounted) return;
+        if (res && res.length) {
+          const mapped = res.map((c) => ({
+            id: `kajabi-${c.id}`,
+            name: c.name || c.email || "Unknown",
+            location: c.public_location || "Kajabi",
+            specialty: c.public_bio || "",
+            avatar: c.avatar ? { uri: c.avatar } : undefined,
+            isFavorite: false,
+          }));
+          setKajabiStudents(mapped);
+        }
+      } catch (e) {
+        console.warn("Failed to load Kajabi customers", e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleStudentPress = (student: Student) => {
-    router.push('/student-info');
+    // Pass the student id to the StudentInfo screen. For Kajabi customers we already
+    // prefix the id with `kajabi-` when mapping, so pass the raw id if present.
+    // If the id is prefixed, keep it as-is; StudentInfo will display the id string.
+    router.push({
+      pathname: "/student-info",
+      params: { id: student.id },
+    });
   };
 
   const toggleFavorite = (id: string) => {
@@ -72,10 +121,13 @@ const StudentBaseDataScreen = () => {
         <BackgroundGradient />
       </View>
 
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Student Base Data</Text>
@@ -87,7 +139,7 @@ const StudentBaseDataScreen = () => {
         {/* Search Bar */}
         <View style={styles.searchSection}>
           <LinearGradient
-            colors={['#E8EEFF', '#F3E9FF', '#FDE7F4']}
+            colors={["#E8EEFF", "#F3E9FF", "#FDE7F4"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.searchContainer}
@@ -109,14 +161,18 @@ const StudentBaseDataScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {mockStudents.map((student) => (
+          {(kajabiStudents || mockStudents).map((student) => (
             <TouchableOpacity
               key={student.id}
               onPress={() => handleStudentPress(student)}
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={['rgba(255, 255, 255, 0.95)', 'rgba(248, 245, 255, 0.95)', 'rgba(253, 245, 250, 0.95)']}
+                colors={[
+                  "rgba(255, 255, 255, 0.95)",
+                  "rgba(248, 245, 255, 0.95)",
+                  "rgba(253, 245, 250, 0.95)",
+                ]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.studentCard}
@@ -124,9 +180,9 @@ const StudentBaseDataScreen = () => {
                 {/* Profile Image */}
                 <View style={styles.profileImageContainer}>
                   {student.avatar ? (
-                    <Image 
-                      source={student.avatar} 
-                      style={styles.profileImage} 
+                    <Image
+                      source={student.avatar}
+                      style={styles.profileImage}
                       contentFit="cover"
                       cachePolicy="memory-disk"
                       priority="high"
@@ -143,8 +199,12 @@ const StudentBaseDataScreen = () => {
                 <View style={styles.studentInfo}>
                   <View style={styles.textSection}>
                     <Text style={styles.studentName}>{student.name}</Text>
-                    <Text style={styles.studentLocation}>{student.location}</Text>
-                    <Text style={styles.studentSpecialty}>{student.specialty}</Text>
+                    <Text style={styles.studentLocation}>
+                      {student.location}
+                    </Text>
+                    <Text style={styles.studentSpecialty}>
+                      {student.specialty}
+                    </Text>
                   </View>
 
                   {/* Bottom Row: Info Button and Heart */}
@@ -156,7 +216,7 @@ const StudentBaseDataScreen = () => {
                     >
                       <Text style={styles.infoButtonText}>Info</Text>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity
                       style={styles.heartIconButton}
                       onPress={(e) => {
@@ -166,9 +226,15 @@ const StudentBaseDataScreen = () => {
                       activeOpacity={0.7}
                     >
                       <Ionicons
-                        name={favorites.includes(student.id) ? 'heart' : 'heart-outline'}
+                        name={
+                          favorites.includes(student.id)
+                            ? "heart"
+                            : "heart-outline"
+                        }
                         size={24}
-                        color={favorites.includes(student.id) ? '#FF3B30' : '#666'}
+                        color={
+                          favorites.includes(student.id) ? "#FF3B30" : "#666"
+                        }
                       />
                     </TouchableOpacity>
                   </View>
@@ -185,7 +251,7 @@ const StudentBaseDataScreen = () => {
 const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -195,11 +261,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     zIndex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 10,
@@ -207,35 +273,35 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#000",
+    textAlign: "center",
   },
   searchIconButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   searchSection: {
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: 'rgba(206, 198, 198, 0.8)',
-    shadowColor: '#E4E4E4',
+    borderColor: "rgba(206, 198, 198, 0.8)",
+    shadowColor: "#E4E4E4",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -245,7 +311,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   scrollView: {
     flex: 1,
@@ -258,71 +324,71 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
-    shadowColor: '#000',
+    flexDirection: "row",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-    position: 'relative',
+    position: "relative",
   },
   profileImageContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginRight: 16,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: "#E0E0E0",
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   profilePlaceholder: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#E8E8EA',
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8E8EA",
   },
   studentInfo: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   textSection: {
     marginBottom: 8,
   },
   studentName: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1C1C1E',
+    fontWeight: "700",
+    color: "#1C1C1E",
     marginBottom: 4,
   },
   studentLocation: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1C1C1E',
+    fontWeight: "700",
+    color: "#1C1C1E",
     marginBottom: 4,
   },
   studentSpecialty: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: "#8E8E93",
   },
   actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   infoButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingHorizontal: 28,
     paddingVertical: 10,
     borderRadius: 10,
   },
   infoButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   heartIconButton: {
     padding: 4,
@@ -330,4 +396,3 @@ const styles = StyleSheet.create({
 });
 
 export default StudentBaseDataScreen;
-

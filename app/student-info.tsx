@@ -2,8 +2,8 @@ import BackgroundGradient from "@/components/BackgroundGradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -13,9 +13,43 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getKajabiCustomer, KajabiCustomer } from "@/lib/kajabi-client";
+import { ActivityIndicator } from "react-native";
 
 const StudentInfoScreen = () => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const params = useLocalSearchParams();
+  const studentId = params?.id as string | undefined;
+  const [customer, setCustomer] = useState<KajabiCustomer | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!studentId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        // If the id was prefixed with 'kajabi-' when mapped, strip prefix
+        const realId = studentId.startsWith("kajabi-")
+          ? studentId.replace(/^kajabi-/, "")
+          : studentId;
+        const res = await getKajabiCustomer(realId);
+        if (!mounted) return;
+        if (res) setCustomer(res);
+        else setError("Customer not found");
+      } catch (e) {
+        if (!mounted) return;
+        setError("Failed to load customer");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [studentId]);
 
   return (
     <View style={styles.wrapper}>
@@ -85,16 +119,44 @@ const StudentInfoScreen = () => {
               </View>
             </View>
 
-            {/* Student Name and Specialty */}
+            {/* Student Name, ID and Specialty */}
             <View style={styles.nameSection}>
-              <Text style={styles.studentName}>Student Name</Text>
-              <Text style={styles.studentSpecialty}>Speciality</Text>
+              <Text style={styles.studentName}>
+                {customer?.name || "Student Name"}
+              </Text>
+              {studentId ? (
+                <Text
+                  style={[
+                    styles.studentSpecialty,
+                    { fontSize: 12, color: "#666", marginTop: 4 },
+                  ]}
+                >
+                  ID: {studentId}
+                </Text>
+              ) : null}
+              <Text style={styles.studentSpecialty}>
+                {customer?.public_location || "Speciality"}
+              </Text>
             </View>
 
             {/* Contact Information */}
             <View style={styles.contactSection}>
-              <Text style={styles.contactText}>Contact Number: +12345678</Text>
-              <Text style={styles.contactText}>Email: Muhammad@gmail.com</Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#2E57E8" />
+              ) : error ? (
+                <Text style={[styles.contactText, { color: "#D0021B" }]}>
+                  {error}
+                </Text>
+              ) : (
+                <>
+                  <Text style={styles.contactText}>
+                    Contact Number: {customer?.public_location || "+N/A"}
+                  </Text>
+                  <Text style={styles.contactText}>
+                    Email: {customer?.email || "N/A"}
+                  </Text>
+                </>
+              )}
             </View>
 
             {/* Heart Icon */}

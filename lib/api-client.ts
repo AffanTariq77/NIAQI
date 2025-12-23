@@ -519,6 +519,32 @@ class ApiClient {
     return response.data;
   }
 
+  async getKajabiCustomers(
+    page: number = 1,
+    size: number = 50,
+    search?: string
+  ): Promise<any[]> {
+    const params: any = { page: page, size: size };
+    if (search) params.search = search;
+    const response = await this.client.get<any[]>("/kajabi/customers", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getKajabiCustomer(id: string): Promise<any | null> {
+    if (!id) return null;
+    try {
+      const response = await this.client.get<any>(
+        `/kajabi/customers/${encodeURIComponent(id)}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Failed to call /kajabi/customers/:id", error);
+      return null;
+    }
+  }
+
   // Cart API methods
   async getCart(): Promise<Cart> {
     const response = await this.client.get<Cart>("/cart");
