@@ -1,99 +1,87 @@
-import React, { useRef, useState } from "react";
-import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+  FlatList,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
-import type { WebViewNavigation } from "react-native-webview";
-import { KAJABI_CONFIG } from "@/lib/config";
+import { getKajabiProducts, KajabiProduct } from "@/lib/kajabi-client";
+import { Image } from "expo-image";
+import * as Linking from "expo-linking";
 
 const CoursesScreen = () => {
-  const webViewRef = useRef<WebView>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<KajabiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleNavigationStateChange = (navState: WebViewNavigation) => {
-    // Handle navigation if needed
-    const { url } = navState;
-
-    // Open external links (non-Kajabi domains) in system browser
-    if (url && !url.includes("mykajabi.com")) {
-      // Optionally prevent navigation and open in external browser
-      // Linking.openURL(url);
-      // return false;
-    }
-  };
-
-  const injectedJavaScript = `
-    // Remove scrollbars
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-    
-    // Make external links open in new tab
-    const links = document.querySelectorAll('a');
-    links.forEach(link => {
-      const href = link.getAttribute('href');
-      if (href && !href.includes('mykajabi.com') && !href.startsWith('/') && !href.startsWith('#')) {
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getKajabiProducts();
+        if (!mounted) return;
+        setProducts(res || []);
+      } catch (e) {
+        console.warn("Failed to load Kajabi products", e);
+      } finally {
+        if (mounted) setLoading(false);
       }
-    });
-    
-    // Observe for dynamically added links
-    const observer = new MutationObserver(() => {
-      const newLinks = document.querySelectorAll('a:not([data-processed])');
-      newLinks.forEach(link => {
-        link.setAttribute('data-processed', 'true');
-        const href = link.getAttribute('href');
-        if (href && !href.includes('mykajabi.com') && !href.startsWith('/') && !href.startsWith('#')) {
-          link.setAttribute('target', '_blank');
-          link.setAttribute('rel', 'noopener noreferrer');
-        }
-      });
-    });
-    
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    true;
-  `;
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <View style={styles.webViewContainer}>
-        <WebView
-          ref={webViewRef}
-          source={{ uri: KAJABI_CONFIG.STOREFRONT_URL }}
-          style={styles.webView}
-          onLoad={() => setIsLoading(false)}
-          onLoadStart={() => setIsLoading(true)}
-          onNavigationStateChange={handleNavigationStateChange}
-          injectedJavaScript={injectedJavaScript}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          scalesPageToFit={true}
-          bounces={true}
-          scrollEnabled={true}
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          // Allow mixed content for compatibility
-          mixedContentMode="compatibility"
-          // Enable automatic height adjustment
-          {...(Platform.OS === "ios" && {
-            allowsInlineMediaPlayback: true,
-            mediaPlaybackRequiresUserAction: false,
-          })}
-          // Enable cookies and storage
-          thirdPartyCookiesEnabled={true}
-          sharedCookiesEnabled={true}
-        />
-
-        {isLoading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#9DAFFB" />
+  const renderItem = ({ item }: { item: KajabiProduct }) => (
+    <View style={styles.productCard}>
+      <View style={styles.productRow}>
+        {item.thumbnail_url ? (
+          <Image
+            source={item.thumbnail_url}
+            style={styles.thumbnail}
+            contentFit="cover"
+          />
+        ) : (
+          <View style={styles.thumbnailPlaceholder} />
+        )}
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={styles.productTitle}>{item.title}</Text>
+          <Text numberOfLines={3} style={styles.productDesc}>
+            {item.description}
+          </Text>
+        </View>
+        {item.product_type_name && (
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeBadgeText}>{item.product_type_name}</Text>
           </View>
         )}
       </View>
+      <TouchableOpacity
+        onPress={() => item.url && Linking.openURL(item.url)}
+        style={styles.openBtn}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.openBtnText}>Open on Storefront</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#9DAFFB" />
+        </View>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(p) => p.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 16 }}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -103,15 +91,47 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  webViewContainer: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  webView: {
-    flex: 1,
+  productCard: {
     backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
+  productRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  thumbnail: {
+    width: 90,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: "#EEE",
+  },
+  thumbnailPlaceholder: {
+    width: 90,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: "#EEE",
+  },
+  productTitle: { fontSize: 16, fontWeight: "700", marginBottom: 8 },
+  productDesc: { fontSize: 14, color: "#444", marginBottom: 10 },
+  openBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: "#5A7CFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  openBtnText: { color: "#FFF", fontWeight: "700" },
+  typeBadge: {
+    backgroundColor: "#F3F6FF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  typeBadgeText: { color: "#5A7CFF", fontWeight: "700", fontSize: 12 },
   loadingContainer: {
     position: "absolute",
     top: 0,

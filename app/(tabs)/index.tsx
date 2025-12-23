@@ -1,7 +1,7 @@
 import BackgroundGradient from "@/components/BackgroundGradient";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient, MembershipPlan } from "@/lib/api-client";
-import { getKajabiCourses } from '@/lib/kajabi-client';
+import { getKajabiProducts } from "@/lib/kajabi-client";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { BlurMask, Canvas, Circle } from "@shopify/react-native-skia";
 import { Image as ExpoImage } from "expo-image";
@@ -284,22 +284,27 @@ const HomeScreen = () => {
         setMemberships(convertedPlans);
 
         console.log("✅ Loaded membership plans from API:", convertedPlans);
-        // Also fetch Kajabi courses and append as additional offers (non-destructive)
+        // Also fetch Kajabi products and append as additional offers (non-destructive)
         try {
-          const kajabi = await getKajabiCourses();
+          const kajabi = await getKajabiProducts();
           if (kajabi && kajabi.length) {
-            console.log('✅ Kajabi courses loaded:', kajabi.length);
-            const extra = kajabi.map((c: any, idx: number) => ({
-              id: `kajabi-${c.id}-${idx}`,
-              title: c.title,
-              currentPrice: 0,
-              oldPrice: null,
-              features: [c.description || 'Kajabi course'],
-            }));
+            console.log("✅ Kajabi products loaded:", kajabi.length);
+            const extra = kajabi.map(
+              (c: any, idx: number) =>
+                ({
+                  id: `kajabi-${c.id}-${idx}`,
+                  title: c.title,
+                  price: "$0",
+                  oldPrice: "",
+                  rating: "4.8",
+                  ratingCount: 0,
+                  features: [c.description || "Kajabi product"],
+                } as Membership)
+            );
             setMemberships((prev) => [...prev, ...extra]);
           }
         } catch (e) {
-          console.warn('Failed to load Kajabi courses', e);
+          console.warn("Failed to load Kajabi products", e);
         }
       } catch (error) {
         console.error("❌ Error fetching membership plans:", error);
@@ -551,9 +556,25 @@ const HomeScreen = () => {
 
           {/* My Courses */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {user?.membershipType ? "Your Membership" : "Choose Your Plan"}
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text style={styles.sectionTitle}>
+                {user?.membershipType ? "Your Membership" : "Choose Your Plan"}
+              </Text>
+              <TouchableOpacity
+                onPress={() => (router.push as any)("/courses-all")}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: "#5A7CFF", fontWeight: "600" }}>
+                  Show all courses
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {user?.membershipType ? (
               // User has a membership - show their current plan

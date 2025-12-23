@@ -1,71 +1,132 @@
-import BackgroundGradient from '@/components/BackgroundGradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import BackgroundGradient from "@/components/BackgroundGradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { getKajabiProducts } from "@/lib/kajabi-client";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Course {
   id: string;
   location: string;
   title: string;
   thumbnail?: any;
-  type: 'in-person' | 'exam' | 'virtual' | 'pre-recorded';
+  type: "in-person" | "exam" | "virtual" | "pre-recorded" | "kajabi";
+  source?: "local" | "kajabi";
+  description?: string;
 }
 
 const courses: Course[] = [
   {
-    id: '1',
-    location: 'WILDWOOD',
-    title: 'ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS',
-    thumbnail: require('../../assets/logo.png'),
-    type: 'in-person',
+    id: "1",
+    location: "WILDWOOD",
+    title: "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS",
+    thumbnail: require("../../assets/logo.png"),
+    type: "in-person",
   },
   {
-    id: '2',
-    location: 'LICENSURE EXAM',
-    title: 'MOLD REMEDIATION OR ASSESSORS',
-    thumbnail: require('../../assets/logo.png'),
-    type: 'exam',
+    id: "2",
+    location: "LICENSURE EXAM",
+    title: "MOLD REMEDIATION OR ASSESSORS",
+    thumbnail: require("../../assets/logo.png"),
+    type: "exam",
   },
   {
-    id: '3',
-    location: 'PRE-RECORDED',
-    title: 'ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 1',
-    type: 'pre-recorded',
+    id: "3",
+    location: "PRE-RECORDED",
+    title:
+      "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 1",
+    type: "pre-recorded",
   },
   {
-    id: '4',
-    location: 'VIRTUAL',
-    title: 'ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 11',
-    type: 'virtual',
+    id: "4",
+    location: "VIRTUAL",
+    title:
+      "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 11",
+    type: "virtual",
   },
   {
-    id: '5',
-    location: 'LICENSURE EXAM',
-    title: 'MOLD REMEDIATION AND ASSESSORS',
-    thumbnail: require('../../assets/logo.png'),
-    type: 'in-person',
+    id: "5",
+    location: "LICENSURE EXAM",
+    title: "MOLD REMEDIATION AND ASSESSORS",
+    thumbnail: require("../../assets/logo.png"),
+    type: "in-person",
   },
   {
-    id: '6',
-    location: 'Pre-Recorded',
-    title: 'Advanced Indoor Air Quality For Mold Assessors and Mold Remediators',
-    type: 'pre-recorded',
+    id: "6",
+    location: "Pre-Recorded",
+    title:
+      "Advanced Indoor Air Quality For Mold Assessors and Mold Remediators",
+    type: "pre-recorded",
   },
 ];
 
+// Note: We'll append Kajabi products at runtime
+
 const SearchScreen = () => {
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
+  const [kajabiItems, setKajabiItems] = useState<Course[]>([]);
+  const [results, setResults] = useState<Course[]>([...courses]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const kajabi = await getKajabiProducts();
+        if (!mounted || !kajabi) return;
+        const mapped = kajabi.map((p) => ({
+          id: `kajabi-${p.id}`,
+          location: "Kajabi",
+          title: p.title,
+          description: p.description,
+          type: "kajabi" as const,
+          source: "kajabi" as const,
+          thumbnail: p.thumbnail_url ? { uri: p.thumbnail_url } : undefined,
+        }));
+        setKajabiItems(mapped);
+      } catch (e) {
+        console.warn("Failed to load Kajabi products in search", e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Merge local + Kajabi and filter client-side
+  useEffect(() => {
+    const merged = [...courses, ...kajabiItems];
+    const q = searchText.trim().toLowerCase();
+    if (!q) {
+      setResults(merged);
+      return;
+    }
+
+    const filtered = merged.filter((c) => {
+      if (!c) return false;
+      const parts = [c.title || "", c.location || "", c.description || ""]
+        .join(" ")
+        .toLowerCase();
+      return parts.includes(q);
+    });
+    setResults(filtered);
+  }, [searchText, kajabiItems]);
 
   const renderIcon = (type: string) => {
     switch (type) {
-      case 'in-person':
-      case 'exam':
+      case "in-person":
+      case "exam":
         return <Ionicons name="people-outline" size={24} color="#666" />;
-      case 'virtual':
-      case 'pre-recorded':
+      case "virtual":
+      case "pre-recorded":
         return <Ionicons name="videocam-outline" size={24} color="#666" />;
       default:
         return null;
@@ -78,11 +139,16 @@ const SearchScreen = () => {
         <BackgroundGradient />
       </View>
 
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
         {/* Search Bar */}
         <View style={styles.searchSection}>
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+            <Ionicons
+              name="search"
+              size={20}
+              color="#666"
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.searchInput}
               placeholder="Search"
@@ -102,20 +168,20 @@ const SearchScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {courses.map((course) => (
-            <TouchableOpacity 
-              key={course.id} 
-              style={styles.courseCard} 
+          {results.map((course) => (
+            <TouchableOpacity
+              key={course.id}
+              style={styles.courseCard}
               activeOpacity={0.8}
-              onPress={() => router.push('/course-details')}
+              onPress={() => router.push("/course-details")}
             >
               <View style={styles.courseContent}>
                 {/* Thumbnail */}
                 <View style={styles.thumbnailContainer}>
                   {course.thumbnail ? (
-                    <Image 
-                      source={course.thumbnail} 
-                      style={styles.thumbnail} 
+                    <Image
+                      source={course.thumbnail}
+                      style={styles.thumbnail}
                       contentFit="cover"
                       cachePolicy="memory-disk"
                       priority="high"
@@ -132,10 +198,27 @@ const SearchScreen = () => {
                   <Text style={styles.courseTitle} numberOfLines={2}>
                     {course.title}
                   </Text>
+                  {course.description ? (
+                    <Text
+                      style={{ fontSize: 12, color: "#999", marginTop: 6 }}
+                      numberOfLines={2}
+                    >
+                      {course.description}
+                    </Text>
+                  ) : null}
                 </View>
 
+                {/* Source badge for Kajabi items */}
+                {course.source === "kajabi" && (
+                  <View style={styles.kajabiBadge}>
+                    <Text style={styles.kajabiBadgeText}>Kajabi</Text>
+                  </View>
+                )}
+
                 {/* Type Icon */}
-                <View style={styles.iconContainer}>{renderIcon(course.type)}</View>
+                <View style={styles.iconContainer}>
+                  {renderIcon(course.type)}
+                </View>
               </View>
             </TouchableOpacity>
           ))}
@@ -148,22 +231,22 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 0,
-    transform: [{ rotate: '180deg' }],
+    transform: [{ rotate: "180deg" }],
   },
   container: {
     flex: 1,
     zIndex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   searchSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 16,
@@ -171,15 +254,15 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 48,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -191,18 +274,18 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   filterButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -216,36 +299,36 @@ const styles = StyleSheet.create({
     paddingBottom: 180,
   },
   courseCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   courseContent: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   thumbnailContainer: {
     width: 80,
     height: 80,
     marginRight: 14,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   thumbnail: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   thumbnailPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#E8E8EA',
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#E8E8EA",
     borderRadius: 12,
   },
   courseInfo: {
@@ -254,22 +337,35 @@ const styles = StyleSheet.create({
   },
   courseLocation: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#1C1C1E',
+    fontWeight: "700",
+    color: "#1C1C1E",
     marginBottom: 6,
     letterSpacing: 0.5,
   },
   courseTitle: {
     fontSize: 12,
-    fontWeight: '400',
-    color: '#666',
+    fontWeight: "400",
+    color: "#666",
     lineHeight: 16,
   },
   iconContainer: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  kajabiBadge: {
+    backgroundColor: "#F0F6FF",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: "center",
+    marginRight: 8,
+  },
+  kajabiBadgeText: {
+    color: "#5A7CFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 

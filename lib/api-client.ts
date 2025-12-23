@@ -514,8 +514,8 @@ class ApiClient {
   }
 
   // Kajabi proxy
-  async getKajabiCourses(): Promise<any[]> {
-    const response = await this.client.get<any[]>('/kajabi/courses');
+  async getKajabiProducts(): Promise<any[]> {
+    const response = await this.client.get<any[]>("/kajabi/products");
     return response.data;
   }
 
