@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,62 +25,20 @@ interface Course {
   description?: string;
 }
 
-const courses: Course[] = [
-  {
-    id: "1",
-    location: "WILDWOOD",
-    title: "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS",
-    thumbnail: require("../../assets/logo.png"),
-    type: "in-person",
-  },
-  {
-    id: "2",
-    location: "LICENSURE EXAM",
-    title: "MOLD REMEDIATION OR ASSESSORS",
-    thumbnail: require("../../assets/logo.png"),
-    type: "exam",
-  },
-  {
-    id: "3",
-    location: "PRE-RECORDED",
-    title:
-      "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 1",
-    type: "pre-recorded",
-  },
-  {
-    id: "4",
-    location: "VIRTUAL",
-    title:
-      "ADVANCED INDOOR AIR QUALITY FOR MOLD ASSESSORS AND REMEDIATORS + Exam 11",
-    type: "virtual",
-  },
-  {
-    id: "5",
-    location: "LICENSURE EXAM",
-    title: "MOLD REMEDIATION AND ASSESSORS",
-    thumbnail: require("../../assets/logo.png"),
-    type: "in-person",
-  },
-  {
-    id: "6",
-    location: "Pre-Recorded",
-    title:
-      "Advanced Indoor Air Quality For Mold Assessors and Mold Remediators",
-    type: "pre-recorded",
-  },
-];
-
-// Note: We'll append Kajabi products at runtime
+// Start with empty local courses — we'll display Kajabi products or server results only
+const courses: Course[] = [];
 
 const SearchScreen = () => {
   const [searchText, setSearchText] = useState("");
   const [kajabiItems, setKajabiItems] = useState<Course[]>([]);
-  const [results, setResults] = useState<Course[]>([...courses]);
+  const [results, setResults] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        setIsLoading(true);
         const kajabi = await getKajabiProducts();
         if (!mounted || !kajabi) return;
         const mapped = kajabi.map((p) => ({
@@ -89,11 +48,19 @@ const SearchScreen = () => {
           description: p.description,
           type: "kajabi" as const,
           source: "kajabi" as const,
-          thumbnail: p.thumbnail_url ? { uri: p.thumbnail_url } : undefined,
+          thumbnail: (p as any).thumbnail_url
+            ? { uri: (p as any).thumbnail_url }
+            : (p as any).thumbnailUrl
+            ? { uri: (p as any).thumbnailUrl }
+            : (p as any).thumbnail
+            ? { uri: (p as any).thumbnail }
+            : undefined,
         }));
         setKajabiItems(mapped);
       } catch (e) {
         console.warn("Failed to load Kajabi products in search", e);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
     })();
     return () => {
@@ -168,60 +135,74 @@ const SearchScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {results.map((course) => (
-            <TouchableOpacity
-              key={course.id}
-              style={styles.courseCard}
-              activeOpacity={0.8}
-              onPress={() => router.push("/course-details")}
-            >
-              <View style={styles.courseContent}>
-                {/* Thumbnail */}
-                <View style={styles.thumbnailContainer}>
-                  {course.thumbnail ? (
-                    <Image
-                      source={course.thumbnail}
-                      style={styles.thumbnail}
-                      contentFit="cover"
-                      cachePolicy="memory-disk"
-                      priority="high"
-                      transition={150}
-                    />
-                  ) : (
-                    <View style={styles.thumbnailPlaceholder} />
-                  )}
-                </View>
+          {isLoading && (
+            <View style={{ padding: 24, alignItems: "center" }}>
+              <ActivityIndicator size="large" color="#5A7CFF" />
+            </View>
+          )}
 
-                {/* Course Info */}
-                <View style={styles.courseInfo}>
-                  <Text style={styles.courseLocation}>{course.location}</Text>
-                  <Text style={styles.courseTitle} numberOfLines={2}>
-                    {course.title}
-                  </Text>
-                  {course.description ? (
-                    <Text
-                      style={{ fontSize: 12, color: "#999", marginTop: 6 }}
-                      numberOfLines={2}
-                    >
-                      {course.description}
-                    </Text>
-                  ) : null}
-                </View>
+          {!isLoading && results.length === 0 && (
+            <View style={{ padding: 24, alignItems: "center" }}>
+              <Text style={{ color: "#666" }}>No results found</Text>
+            </View>
+          )}
 
-                {/* Source badge for Kajabi items */}
-                {course.source === "kajabi" && (
-                  <View style={styles.kajabiBadge}>
-                    <Text style={styles.kajabiBadgeText}>Kajabi</Text>
+          {!isLoading &&
+            results.length > 0 &&
+            results.map((course) => (
+              <TouchableOpacity
+                key={course.id}
+                style={styles.courseCard}
+                activeOpacity={0.8}
+                onPress={() => router.push("/course-details")}
+              >
+                <View style={styles.courseContent}>
+                  {/* Thumbnail */}
+                  <View style={styles.thumbnailContainer}>
+                    {course.thumbnail ? (
+                      <Image
+                        source={course.thumbnail}
+                        style={styles.thumbnail}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        priority="high"
+                        transition={150}
+                      />
+                    ) : (
+                      <View style={styles.thumbnailPlaceholder} />
+                    )}
                   </View>
-                )}
 
-                {/* Type Icon */}
-                <View style={styles.iconContainer}>
-                  {renderIcon(course.type)}
+                  {/* Course Info */}
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseLocation}>{course.location}</Text>
+                    <Text style={styles.courseTitle} numberOfLines={2}>
+                      {course.title}
+                    </Text>
+                    {course.description ? (
+                      <Text
+                        style={{ fontSize: 12, color: "#999", marginTop: 6 }}
+                        numberOfLines={2}
+                      >
+                        {course.description}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  {/* Source badge for Kajabi items */}
+                  {course.source === "kajabi" && (
+                    <View style={styles.kajabiBadge}>
+                      <Text style={styles.kajabiBadgeText}>Kajabi</Text>
+                    </View>
+                  )}
+
+                  {/* Type Icon */}
+                  <View style={styles.iconContainer}>
+                    {renderIcon(course.type)}
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))}
         </ScrollView>
       </SafeAreaView>
     </View>

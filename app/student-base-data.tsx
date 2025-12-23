@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -63,6 +64,7 @@ const mockStudents: Student[] = [
 const StudentBaseDataScreen = () => {
   const [searchText, setSearchText] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [kajabiStudents, setKajabiStudents] = useState<Array<{
     id: string;
     name: string;
@@ -76,6 +78,7 @@ const StudentBaseDataScreen = () => {
     let mounted = true;
     (async () => {
       try {
+        setIsLoading(true);
         const res = await getKajabiCustomers(1, 50);
         if (!mounted) return;
         if (res && res.length) {
@@ -88,9 +91,14 @@ const StudentBaseDataScreen = () => {
             isFavorite: false,
           }));
           setKajabiStudents(mapped);
+        } else {
+          // no customers found
+          setKajabiStudents([]);
         }
       } catch (e) {
         console.warn("Failed to load Kajabi customers", e);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
     })();
     return () => {
@@ -161,87 +169,96 @@ const StudentBaseDataScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {(kajabiStudents || mockStudents).map((student) => (
-            <TouchableOpacity
-              key={student.id}
-              onPress={() => handleStudentPress(student)}
-              activeOpacity={0.9}
-            >
-              <LinearGradient
-                colors={[
-                  "rgba(255, 255, 255, 0.95)",
-                  "rgba(248, 245, 255, 0.95)",
-                  "rgba(253, 245, 250, 0.95)",
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.studentCard}
+          {isLoading ? (
+            <View style={{ padding: 24, alignItems: "center" }}>
+              <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+          ) : (
+            (kajabiStudents && kajabiStudents.length > 0
+              ? kajabiStudents
+              : mockStudents
+            ).map((student) => (
+              <TouchableOpacity
+                key={student.id}
+                onPress={() => handleStudentPress(student)}
+                activeOpacity={0.9}
               >
-                {/* Profile Image */}
-                <View style={styles.profileImageContainer}>
-                  {student.avatar ? (
-                    <Image
-                      source={student.avatar}
-                      style={styles.profileImage}
-                      contentFit="cover"
-                      cachePolicy="memory-disk"
-                      priority="high"
-                      transition={200}
-                    />
-                  ) : (
-                    <View style={styles.profilePlaceholder}>
-                      <Ionicons name="person" size={50} color="#999" />
-                    </View>
-                  )}
-                </View>
-
-                {/* Student Info */}
-                <View style={styles.studentInfo}>
-                  <View style={styles.textSection}>
-                    <Text style={styles.studentName}>{student.name}</Text>
-                    <Text style={styles.studentLocation}>
-                      {student.location}
-                    </Text>
-                    <Text style={styles.studentSpecialty}>
-                      {student.specialty}
-                    </Text>
-                  </View>
-
-                  {/* Bottom Row: Info Button and Heart */}
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={styles.infoButton}
-                      onPress={() => handleStudentPress(student)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.infoButtonText}>Info</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.heartIconButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(student.id);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons
-                        name={
-                          favorites.includes(student.id)
-                            ? "heart"
-                            : "heart-outline"
-                        }
-                        size={24}
-                        color={
-                          favorites.includes(student.id) ? "#FF3B30" : "#666"
-                        }
+                <LinearGradient
+                  colors={[
+                    "rgba(255, 255, 255, 0.95)",
+                    "rgba(248, 245, 255, 0.95)",
+                    "rgba(253, 245, 250, 0.95)",
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.studentCard}
+                >
+                  {/* Profile Image */}
+                  <View style={styles.profileImageContainer}>
+                    {student.avatar ? (
+                      <Image
+                        source={student.avatar}
+                        style={styles.profileImage}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        priority="high"
+                        transition={200}
                       />
-                    </TouchableOpacity>
+                    ) : (
+                      <View style={styles.profilePlaceholder}>
+                        <Ionicons name="person" size={50} color="#999" />
+                      </View>
+                    )}
                   </View>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          ))}
+
+                  {/* Student Info */}
+                  <View style={styles.studentInfo}>
+                    <View style={styles.textSection}>
+                      <Text style={styles.studentName}>{student.name}</Text>
+                      <Text style={styles.studentLocation}>
+                        {student.location}
+                      </Text>
+                      <Text style={styles.studentSpecialty}>
+                        {student.specialty}
+                      </Text>
+                    </View>
+
+                    {/* Bottom Row: Info Button and Heart */}
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={styles.infoButton}
+                        onPress={() => handleStudentPress(student)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.infoButtonText}>Info</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.heartIconButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(student.id);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name={
+                            favorites.includes(student.id)
+                              ? "heart"
+                              : "heart-outline"
+                          }
+                          size={24}
+                          color={
+                            favorites.includes(student.id) ? "#FF3B30" : "#666"
+                          }
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

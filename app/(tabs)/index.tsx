@@ -65,6 +65,7 @@ interface Membership {
   rating: string;
   ratingCount: number;
   features: string[];
+  source?: string;
 }
 
 // Mock data as fallback
@@ -313,6 +314,7 @@ const HomeScreen = () => {
                 rating: "4.8",
                 ratingCount: 0,
                 features: [c.description || "Kajabi product"],
+                source: "kajabi",
               });
             }
             if (extra.length) setMemberships((prev) => [...prev, ...extra]);
@@ -673,15 +675,17 @@ const HomeScreen = () => {
                     Available Upgrades
                   </Text>
                 )}
-                {memberships.map((membership) => (
-                  <CourseCard
-                    key={membership.id}
-                    membership={membership}
-                    isExpanded={expandedCard === membership.id}
-                    onToggle={() => handleToggleCard(membership.id)}
-                    onStartNow={() => handleStartNow(membership.id)}
-                  />
-                ))}
+                {memberships
+                  .filter((m) => m.source !== "kajabi")
+                  .map((membership) => (
+                    <CourseCard
+                      key={membership.id}
+                      membership={membership}
+                      isExpanded={expandedCard === membership.id}
+                      onToggle={() => handleToggleCard(membership.id)}
+                      onStartNow={() => handleStartNow(membership.id)}
+                    />
+                  ))}
               </>
             ) : user?.membershipType === "PREMIUM_PLUS" ? (
               <View style={styles.maxTierContainer}>

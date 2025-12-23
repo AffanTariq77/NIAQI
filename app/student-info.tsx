@@ -91,29 +91,37 @@ const StudentInfoScreen = () => {
             <View style={styles.topRow}>
               {/* Profile Image */}
               <View style={styles.profileImageContainer}>
-                <Image
-                  source={require("../assets/student1.png")}
-                  style={styles.profileImage}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  priority="high"
-                  transition={200}
-                />
+                {customer?.avatar ? (
+                  <Image
+                    source={{ uri: customer.avatar }}
+                    style={styles.profileImage}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    priority="high"
+                    transition={200}
+                  />
+                ) : (
+                  <View style={styles.placeholderCircle}>
+                    <Ionicons name="person" size={64} color="#999" />
+                  </View>
+                )}
               </View>
 
               {/* Right Side Content */}
               <View style={styles.rightContent}>
-                {/* Experience Badge */}
-                <View style={styles.experienceBadge}>
-                  <Ionicons name="ribbon" size={14} color="#007AFF" />
-                  <Text style={styles.experienceText}>15 years experience</Text>
-                </View>
+                {customer ? (
+                  <View style={styles.experienceBadge}>
+                    <Ionicons name="ribbon" size={14} color="#007AFF" />
+                    <Text style={styles.experienceText}>Kajabi</Text>
+                  </View>
+                ) : null}
 
                 {/* Description Box */}
                 <View style={styles.descriptionBox}>
                   <Text style={styles.descriptionText}>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    {customer?.public_bio
+                      ? customer.public_bio
+                      : "No profile description available."}
                   </Text>
                 </View>
               </View>
@@ -149,9 +157,11 @@ const StudentInfoScreen = () => {
                 </Text>
               ) : (
                 <>
-                  <Text style={styles.contactText}>
-                    Contact Number: {customer?.public_location || "+N/A"}
-                  </Text>
+                  {customer?.public_location ? (
+                    <Text style={styles.contactText}>
+                      Location: {customer.public_location}
+                    </Text>
+                  ) : null}
                   <Text style={styles.contactText}>
                     Email: {customer?.email || "N/A"}
                   </Text>
@@ -177,34 +187,12 @@ const StudentInfoScreen = () => {
           <View style={styles.detailSection}>
             <Text style={styles.sectionTitle}>Profile</Text>
             <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
+              {customer?.public_bio || "No profile information provided."}
             </Text>
           </View>
 
-          {/* Career Path Section */}
-          <View style={styles.detailSection}>
-            <Text style={styles.sectionTitle}>Career Path</Text>
-            <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
-            </Text>
-          </View>
-
-          {/* Highlights Section */}
-          <View style={styles.detailSection}>
-            <Text style={styles.sectionTitle}>Highlights</Text>
-            <Text style={styles.sectionText}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
-            </Text>
-          </View>
+          {/* Optional sections if Kajabi provides more detailed fields */}
+          {customer?.public_bio ? null : null}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -300,6 +288,14 @@ const styles = StyleSheet.create({
   profileImage: {
     width: "100%",
     height: "100%",
+  },
+  placeholderCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8E8EA",
   },
   rightContent: {
     flex: 1,
