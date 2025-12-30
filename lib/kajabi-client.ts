@@ -5,6 +5,8 @@ export interface KajabiProduct {
   title: string;
   description?: string;
   url?: string;
+  thumbnail_url?: string;
+  product_type_name?: string;
 }
 
 export async function getKajabiProducts(): Promise<KajabiProduct[]> {
