@@ -1,0 +1,118 @@
+// Environment Configuration
+// Update these values based on your development setup
+import { Platform } from "react-native";
+
+// Get environment variables from .env file
+const ENV_API_HOST = process.env.EXPO_PUBLIC_API_HOST;
+const ENV_API_PORT = process.env.EXPO_PUBLIC_API_PORT;
+const ENV_API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || "http";
+
+// Get environment variables from .env file
+// For iOS simulator, use localhost. For physical devices, use your machine's IP
+const getApiHost = () => {
+  // PRIORITY 1: If environment variable is set to production URL, use it
+  if (
+    ENV_API_HOST &&
+    ENV_API_HOST !== "localhost" &&
+    ENV_API_HOST !== "127.0.0.1"
+  ) {
+    console.log("🌍 Using PRODUCTION backend:", ENV_API_HOST);
+    return ENV_API_HOST;
+  }
+
+  // PRIORITY 2: Development - platform-specific localhost handling
+  console.log("🏠 Using LOCAL development backend");
+  
+  // iOS Simulator can use localhost
+  if (Platform.OS === "ios") {
+    return "localhost";
+  }
+
+  // Android Emulator: Use 10.0.2.2 (special alias to host machine)
+  // This allows Android to reach Mac's localhost
+  if (Platform.OS === "android") {
+    return "10.0.2.2";
+  }
+
+  // Web/other platforms
+  return "localhost";
+};
+
+const API_HOST = getApiHost();
+const API_PORT = ENV_API_PORT || "5000";
+const API_PROTOCOL = ENV_API_PROTOCOL;
+
+// Determine if we're using production backend
+const isProduction =
+  API_HOST.includes("onrender.com") || API_HOST.includes("railway.app");
+
+// Build the full API URL
+const BASE_URL = isProduction
+  ? `${API_PROTOCOL}://${API_HOST}/api` // Production: https://niaqi-backend.onrender.com/api
+  : `http://${API_HOST}:${API_PORT}/api`; // Development: http://localhost:5000/api
+
+// Log the configuration for debugging
+console.log("📡 API Configuration:");
+console.log("  - Host:", API_HOST);
+console.log("  - Protocol:", API_PROTOCOL);
+console.log("  - Port:", API_PORT);
+console.log("  - Is Production:", isProduction);
+console.log("  - Full URL:", BASE_URL);
+console.log("✅ Backend URL configured!");
+
+export const API_CONFIG = {
+  BASE_URL,
+  // Timeout for API requests (in milliseconds)
+  TIMEOUT: 10000,
+
+  // Retry configuration
+  MAX_RETRIES: 3,
+  RETRY_DELAY: 1000,
+};
+
+// Kajabi Configuration
+export const KAJABI_CONFIG = {
+  // Your Kajabi storefront URL (configurable via .env)
+  STOREFRONT_URL:
+    process.env.EXPO_PUBLIC_KAJABI_STOREFRONT_URL ||
+    "https://niaqi.mykajabi.com",
+
+  // Alternative URLs for different environments
+  // PRODUCTION_URL: "https://your-custom-domain.com",
+  // STAGING_URL: "https://staging.mykajabi.com",
+};
+
+// Stripe Configuration
+export const STRIPE_CONFIG = {
+  PUBLISHABLE_KEY:
+    process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+    "pk_test_51Sc3o43f4cU2mk6c9EpJ2omzaRPoWDjk6SNikcpSxuZ9TzB7zszomdxsaUcS51ZCS8s8BhKQQpr9UAdOLII6lmNj00JIe16HiH",
+  MERCHANT_NAME: "NIAQI",
+  RETURN_URL: "niaqi://stripe-redirect",
+};
+
+// Instructions for finding your IP address:
+//
+// macOS/Linux:
+//   Run: ifconfig | grep "inet " | grep -v 127.0.0.1
+//   Look for something like: inet 192.168.1.100
+//
+// Windows:
+//   Run: ipconfig
+//   Look for "IPv4 Address" under your network adapter
+//
+// For Expo development:
+// 1. Make sure your phone and computer are on the same WiFi network
+// 2. Update the IP address above
+// 3. Restart the Expo development server
+//
+// For Android emulator:
+//   Use: http://10.0.2.2:5000/api
+//
+// For iOS simulator:
+//   Use: http://localhost:5000/api
+//
+// For physical devices:
+//   Use your computer's actual IP address (e.g., http://192.168.1.100:5000/api)
+
+export default API_CONFIG;
